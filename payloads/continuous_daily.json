@@ -1,0 +1,23 @@
+{
+  "Name": "Daily Profile Update",
+  "Machines": ["machine-1", "machine-2"],
+  "Action": "PatchProfile",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "Payload": {
+        "Profile": "PowerSaver"
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Continuous",
+    "Time": "22:00:00",
+    "Period": {
+      "StartDay": "2026-02-10",
+      "EndDay": "2026-12-31",
+      "DaysOfWeek": [],
+      "DaysOfMonth": null
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "Name": "Patch Profile Performance to Multiple Managers",
+  "Machines": ["machine-1", "machine-2"],
+  "Action": "PatchProfile",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "Payload": {
+        "Profile": "Performance"
+      }
+    },
+    {
+      "ManagerID": "bmc2",
+      "Payload": {
+        "Profile": "Balanced"
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "08:00:00",
+    "Period": null
+  }
+}

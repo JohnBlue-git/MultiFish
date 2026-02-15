@@ -1,0 +1,23 @@
+{
+  "Name": "Weekday Performance Mode",
+  "Machines": ["machine-1"],
+  "Action": "PatchProfile",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "Payload": {
+        "Profile": "Performance"
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Continuous",
+    "Time": "08:00:00",
+    "Period": {
+      "StartDay": "2026-02-10",
+      "EndDay": "2026-12-31",
+      "DaysOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "DaysOfMonth": null
+    }
+  }
+}

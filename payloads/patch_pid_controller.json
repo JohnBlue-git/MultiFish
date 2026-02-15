@@ -1,0 +1,29 @@
+{
+  "Name": "Update PID Controller Parameters",
+  "Machines": ["machine-1"],
+  "Action": "PatchPidController",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "PidControllerID": "cpu_temp_controller",
+      "Payload": {
+        "FFGainCoefficient": 0.5,
+        "FFOffCoefficient": 10.0,
+        "ICoefficient": 0.1,
+        "ILimitMax": 50.0,
+        "ILimitMin": -50.0,
+        "OutLimitMax": 100.0,
+        "OutLimitMin": 0.0,
+        "PCoefficient": 0.8,
+        "SetPoint": 75.0,
+        "SlewNeg": -5.0,
+        "SlewPos": 5.0
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "12:00:00",
+    "Period": null
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "Name": "Update Manager Service Identification",
+  "Machines": ["machine-1"],
+  "Action": "PatchManager",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "Payload": {
+        "ServiceIdentification": "Production BMC v2.1"
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "09:00:00",
+    "Period": null
+  }
+}

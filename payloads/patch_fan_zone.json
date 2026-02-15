@@ -1,0 +1,20 @@
+{
+  "Name": "Update Fan Zone Configuration",
+  "Machines": ["machine-1"],
+  "Action": "PatchFanZone",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "FanZoneID": "cpu_zone",
+      "Payload": {
+        "FailSafePercent": 100.0,
+        "MinThermalOutput": 30.0
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "11:00:00",
+    "Period": null
+  }
+}

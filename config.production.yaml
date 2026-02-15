@@ -1,0 +1,40 @@
+# MultiFish Production Configuration
+# Production Environment
+
+# HTTP Server
+port: 8080
+
+# Logging
+log_level: info
+
+# Job Scheduler
+worker_pool_size: 100
+
+# Logs Directory
+logs_dir: /var/log/multifish
+
+# Graceful Shutdown
+shutdown_timeout: 60      # Timeout in seconds for graceful shutdown (production: 60)
+                          # Longer timeout for production to allow jobs to complete
+
+# Rate Limiting (Security) - Stricter limits for production
+rate_limit_enabled: true
+rate_limit_rate: 5.0      # 5 requests per second (per IP)
+rate_limit_burst: 10      # Maximum burst size of 10
+
+# Authentication (Security) - STRONGLY RECOMMENDED for production
+# See SECURITY.md for detailed configuration guide
+auth:
+  enabled: true            # Authentication enabled for production
+  mode: token             # Options: "none", "basic", "token"
+  
+  # Basic Authentication (if mode is "basic")
+  basic_auth:
+    username: ""          # Set via environment variable: BASIC_AUTH_USERNAME
+    password: ""          # Set via environment variable: BASIC_AUTH_PASSWORD
+  
+  # Token Authentication (if mode is "token")
+  token_auth:
+    tokens:               # Set via environment variable: TOKEN_AUTH_TOKENS (comma-separated)
+      - "CHANGE-ME-TO-A-SECURE-RANDOM-TOKEN"
+

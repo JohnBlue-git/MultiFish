@@ -1,0 +1,41 @@
+# MultiFish systemd service file
+# 
+# Installation:
+# 1. Copy this file to /etc/systemd/system/multifish.service
+# 2. Update the paths and user as needed
+# 3. Run: sudo systemctl daemon-reload
+# 4. Run: sudo systemctl enable multifish
+# 5. Run: sudo systemctl start multifish
+#
+# Usage:
+# sudo systemctl status multifish   # Check status
+# sudo systemctl start multifish    # Start service
+# sudo systemctl stop multifish     # Stop service
+# sudo systemctl restart multifish  # Restart service
+# sudo journalctl -u multifish -f   # View logs
+
+[Unit]
+Description=MultiFish BMC Management API
+Documentation=https://github.com/stmcginnis/gofish
+After=network.target
+
+[Service]
+Type=simple
+User=yujen
+Group=yujen
+WorkingDirectory=/home/yujen/Golang/Gofish
+ExecStart=/home/yujen/Golang/Gofish/multifish
+Restart=on-failure
+RestartSec=5s
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=multifish
+
+[Install]
+WantedBy=multi-user.target

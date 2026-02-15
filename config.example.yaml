@@ -1,0 +1,41 @@
+# MultiFish Configuration File
+# Development Environment
+
+# HTTP Server
+port: 8080
+
+# Logging
+log_level: debug
+
+# Job Scheduler
+worker_pool_size: 50
+
+# Logs Directory
+logs_dir: ./logs
+
+# Graceful Shutdown
+shutdown_timeout: 30      # Timeout in seconds for graceful shutdown (default: 30)
+                          # Increase this value if you have long-running jobs
+                          # For example, use 60 for 1 minute, 120 for 2 minutes
+
+# Rate Limiting (Security)
+rate_limit_enabled: true
+rate_limit_rate: 10.0     # Requests per second (per IP)
+rate_limit_burst: 20      # Maximum burst size
+
+# Authentication (Security)
+# See SECURITY.md for detailed configuration guide
+auth:
+  enabled: false           # Set to true to enable authentication
+  mode: none              # Options: "none", "basic", "token"
+  
+  # Basic Authentication
+  basic_auth:
+    username: ""          # Set username when mode is "basic"
+    password: ""          # Set password when mode is "basic"
+  
+  # Token Authentication
+  token_auth:
+    tokens: []            # List of valid tokens when mode is "token"
+                          # Example: ["my-secret-token-123", "another-token-456"]
+

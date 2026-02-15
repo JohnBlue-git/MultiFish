@@ -1,0 +1,737 @@
+{
+  "info": {
+    "name": "MultiFish API - Complete Collection",
+    "description": "Complete Redfish API collection for managing multiple BMC machines with job scheduling",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/MultiFish/v1",
+      "type": "string"
+    },
+    {
+      "key": "machineId",
+      "value": "server-1",
+      "type": "string"
+    },
+    {
+      "key": "managerId",
+      "value": "bmc",
+      "type": "string"
+    },
+    {
+      "key": "fanControllerId",
+      "value": "cpu_fan_controller",
+      "type": "string"
+    },
+    {
+      "key": "fanZoneId",
+      "value": "cpu_zone",
+      "type": "string"
+    },
+    {
+      "key": "pidControllerId",
+      "value": "cpu_temp_controller",
+      "type": "string"
+    },
+    {
+      "key": "jobId",
+      "value": "job_123456",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Service Root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": ["{{baseUrl}}"]
+        },
+        "description": "Get the service root with links to all available resources"
+      }
+    },
+    {
+      "name": "Platform Management",
+      "item": [
+        {
+          "name": "List All Platforms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform"]
+            },
+            "description": "Get a list of all registered BMC platforms/machines"
+          }
+        },
+        {
+          "name": "Add Platform - Base Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Id\": \"server-1\",\"Name\": \"Standard Redfish Server\",\"Type\": \"Base\",\"Endpoint\": \"https://192.168.1.100\",\"Username\": \"admin\",\"Password\": \"password\",\"Insecure\": true,\"HTTPClientTimeout\": 30}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/Platform",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform"]
+            },
+            "description": "Register a new standard Redfish BMC platform"
+          }
+        },
+        {
+          "name": "Add Platform - Extend Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Id\": \"server-2\",\"Name\": \"OpenBMC Server with OEM Features\",\"Type\": \"Extend\",\"Endpoint\": \"https://192.168.1.101\",\"Username\": \"root\",\"Password\": \"0penBmc\",\"Insecure\": true,\"HTTPClientTimeout\": 30,\"DisableEtagMatch\": true}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/Platform",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform"]
+            },
+            "description": "Register an OpenBMC platform with OEM extensions"
+          }
+        },
+        {
+          "name": "Get Platform Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}"]
+            },
+            "description": "Get detailed information about a specific platform"
+          }
+        },
+        {
+          "name": "Update Platform Configuration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Updated Server Name\",\"HTTPClientTimeout\": 60}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}"]
+            },
+            "description": "Update platform configuration"
+          }
+        },
+        {
+          "name": "Delete Platform",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}"]
+            },
+            "description": "Remove a platform from the system"
+          }
+        },
+        {
+          "name": "Get Platform Systems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}/Systems",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}", "Systems"]
+            },
+            "description": "Get all systems under this platform"
+          }
+        },
+        {
+          "name": "Get Platform Managers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}", "Managers"]
+            },
+            "description": "Get all managers under this platform"
+          }
+        }
+      ],
+      "description": "Platform/Machine management operations"
+    },
+    {
+      "name": "Manager Operations",
+      "item": [
+        {
+          "name": "Get Manager Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}"]
+            },
+            "description": "Get detailed information about a manager"
+          }
+        },
+        {
+          "name": "Update Manager - ServiceIdentification",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ServiceIdentification\": \"Production BMC v2.1\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}"]
+            },
+            "description": "Update manager properties"
+          }
+        }
+      ],
+      "description": "Standard manager operations"
+    },
+    {
+      "name": "OEM Extensions (OpenBMC)",
+      "item": [
+        {
+          "name": "Profile Management",
+          "item": [
+            {
+              "name": "Get Current Profile",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                },
+                "description": "Get current thermal profile setting"
+              }
+            },
+            {
+              "name": "Update Profile - Performance",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"Profile\": \"Performance\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                },
+                "description": "Set profile to Performance mode (maximum performance)"
+              }
+            },
+            {
+              "name": "Update Profile - Balanced",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"Profile\": \"Balanced\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                },
+                "description": "Set profile to Balanced mode (optimal balance)"
+              }
+            },
+            {
+              "name": "Update Profile - PowerSaver",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"Profile\": \"PowerSaver\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                },
+                "description": "Set profile to PowerSaver mode (minimize power consumption)"
+              }
+            },
+            {
+              "name": "Update Profile - Custom",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"Profile\": \"Custom\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                },
+                "description": "Set profile to Custom mode (user-defined settings)"
+              }
+            }
+          ],
+          "description": "Thermal profile management (Performance, Balanced, PowerSaver, Custom)"
+        },
+        {
+          "name": "Fan Controllers",
+          "item": [
+            {
+              "name": "Get All Fan Controllers",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController"]
+                },
+                "description": "Get collection of all fan controllers"
+              }
+            },
+            {
+              "name": "Get Fan Controller Details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController/{{fanControllerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController", "{{fanControllerId}}"]
+                },
+                "description": "Get details of a specific fan controller"
+              }
+            },
+            {
+              "name": "Update Fan Controller",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"Multiplier\": 1.2,\"StepDown\": 2,\"StepUp\": 5}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController/{{fanControllerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController", "{{fanControllerId}}"]
+                },
+                "description": "Update fan controller parameters (Multiplier, StepDown, StepUp)"
+              }
+            }
+          ],
+          "description": "Fan controller configuration and management"
+        },
+        {
+          "name": "Fan Zones",
+          "item": [
+            {
+              "name": "Get All Fan Zones",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone"]
+                },
+                "description": "Get collection of all fan zones"
+              }
+            },
+            {
+              "name": "Get Fan Zone Details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone/{{fanZoneId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone", "{{fanZoneId}}"]
+                },
+                "description": "Get details of a specific fan zone"
+              }
+            },
+            {
+              "name": "Update Fan Zone",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"FailSafePercent\": 100.0,\"MinThermalOutput\": 30.0}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone/{{fanZoneId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone", "{{fanZoneId}}"]
+                },
+                "description": "Update fan zone configuration (FailSafePercent, MinThermalOutput)"
+              }
+            }
+          ],
+          "description": "Fan zone configuration and management"
+        },
+        {
+          "name": "PID Controllers",
+          "item": [
+            {
+              "name": "Get All PID Controllers",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController"]
+                },
+                "description": "Get collection of all PID controllers"
+              }
+            },
+            {
+              "name": "Get PID Controller Details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController/{{pidControllerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController", "{{pidControllerId}}"]
+                },
+                "description": "Get details of a specific PID controller"
+              }
+            },
+            {
+              "name": "Update PID Controller",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"FFGainCoefficient\": 0.5,\"FFOffCoefficient\": 10.0,\"ICoefficient\": 0.1,\"ILimitMax\": 50.0,\"ILimitMin\": -50.0,\"OutLimitMax\": 100.0,\"OutLimitMin\": 0.0,\"PCoefficient\": 0.8,\"SetPoint\": 75.0,\"SlewNeg\": -5.0,\"SlewPos\": 5.0}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController/{{pidControllerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController", "{{pidControllerId}}"]
+                },
+                "description": "Update PID controller parameters (P, I, D coefficients, setpoints, limits)"
+              }
+            }
+          ],
+          "description": "PID controller configuration and management"
+        }
+      ],
+      "description": "OpenBMC OEM extensions for advanced thermal management"
+    },
+    {
+      "name": "Job Service",
+      "item": [
+        {
+          "name": "Get Job Service Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/JobService",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService"]
+            },
+            "description": "Get job service information and capabilities (worker pool status)"
+          }
+        },
+        {
+          "name": "Update Worker Pool Size",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"WorkerPoolSize\": 10}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService"]
+            },
+            "description": "Update job service configuration (worker pool size)"
+          }
+        },
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Get list of all jobs in the system"
+          }
+        },
+        {
+          "name": "Create Job - Profile Update (Once)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Update to Performance Profile\",\"Machines\": [\"server-1\", \"server-2\"],\"Action\": \"PatchProfile\",\"Payload\": [{\"ManagerID\": \"bmc\",\"Payload\": {\"Profile\": \"Performance\"}}],\"Schedule\": {\"Type\": \"Once\",\"Time\": \"14:00:00\",\"Period\": null}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Create a one-time job to update profile"
+          }
+        },
+        {
+          "name": "Create Job - Daily Recurring",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Nightly PowerSaver Mode\",\"Machines\": [\"server-1\"],\"Action\": \"PatchProfile\",\"Payload\": [{\"ManagerID\": \"bmc\",\"Payload\": {\"Profile\": \"PowerSaver\"}}],\"Schedule\": {\"Type\": \"Continuous\",\"Time\": \"22:00:00\",\"Period\": {\"StartDay\": \"2026-02-10\",\"EndDay\": \"2026-12-31\",\"DaysOfWeek\": [],\"DaysOfMonth\": null}}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Create a daily recurring job"
+          }
+        },
+        {
+          "name": "Create Job - Weekday Recurring",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Weekday Performance Mode\",\"Machines\": [\"server-1\"],\"Action\": \"PatchProfile\",\"Payload\": [{\"ManagerID\": \"bmc\",\"Payload\": {\"Profile\": \"Performance\"}}],\"Schedule\": {\"Type\": \"Continuous\",\"Time\": \"08:00:00\",\"Period\": {\"StartDay\": \"2026-02-10\",\"EndDay\": \"2026-12-31\",\"DaysOfWeek\": [\"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\"],\"DaysOfMonth\": null}}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Create a weekday recurring job"
+          }
+        },
+        {
+          "name": "Create Job - Manager Update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Update Manager ServiceIdentification\",\"Machines\": [\"server-1\"],\"Action\": \"PatchManager\",\"Payload\": [{\"ManagerID\": \"bmc\",\"Payload\": {\"ServiceIdentification\": \"Production BMC v2.1\"}}],\"Schedule\": {\"Type\": \"Once\",\"Time\": \"09:00:00\",\"Period\": null}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Create a job to update manager properties"
+          }
+        },
+        {
+          "name": "Create Job - Fan Controller Update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Update Fan Controller\",\"Machines\": [\"server-1\"],\"Action\": \"PatchFanController\",\"Payload\": [{\"ManagerID\": \"bmc\",\"FanControllerID\": \"cpu_fan_controller\",\"Payload\": {\"Multiplier\": 1.2,\"StepDown\": 2,\"StepUp\": 5}}],\"Schedule\": {\"Type\": \"Once\",\"Time\": \"10:00:00\",\"Period\": null}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs"]
+            },
+            "description": "Create a job to update fan controller"
+          }
+        },
+        {
+          "name": "Get Job Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs", "{{jobId}}"]
+            },
+            "description": "Get details of a specific job"
+          }
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"Name\": \"Updated Job Name\",\"Schedule\": {\"Type\": \"Once\",\"Time\": \"16:00:00\",\"Period\": null}}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs", "{{jobId}}"]
+            },
+            "description": "Update job configuration"
+          }
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs", "{{jobId}}"]
+            },
+            "description": "Delete a job"
+          }
+        },
+        {
+          "name": "Trigger Job Immediately",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/JobService/Jobs/{{jobId}}/Actions/Cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["JobService", "Jobs", "{{jobId}}", "Actions", "Cancel"]
+            },
+            "description": "Trigger a job to execute immediately (regardless of schedule)"
+          }
+        }
+      ],
+      "description": "Job scheduling and automation service"
+    }
+  ]
+}

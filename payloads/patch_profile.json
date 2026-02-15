@@ -1,0 +1,18 @@
+{
+  "Name": "Update Performance Profile",
+  "Machines": ["machine-1", "machine-2"],
+  "Action": "PatchProfile",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "Payload": {
+        "Profile": "Performance"
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "08:00:00",
+    "Period": null
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "Name": "Update Fan Controller Settings",
+  "Machines": ["machine-1"],
+  "Action": "PatchFanController",
+  "Payload": [
+    {
+      "ManagerID": "bmc",
+      "FanControllerID": "cpu_fan_controller",
+      "Payload": {
+        "Multiplier": 1.2,
+        "StepDown": 2,
+        "StepUp": 5
+      }
+    }
+  ],
+  "Schedule": {
+    "Type": "Once",
+    "Time": "10:00:00",
+    "Period": null
+  }
+}
