@@ -42,7 +42,7 @@ MultiFish follows a modular, layered architecture designed for scalability and e
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                   REST API (Gin Framework)                        │
+│                   REST API (Gin Framework)                       │
 │      /MultiFish/v1/{Platforms|JobService|Managers}               │
 └────────────────┬─────────────────────────┬───────────────────────┘
                  │                         │
@@ -57,16 +57,16 @@ MultiFish follows a modular, layered architecture designed for scalability and e
                  │              └─────────┬────────────┘
                  │                        │
          ┌───────▼────────────────────────▼─────────────┐
-         │         Provider Registry                     │
+         │         Provider Registry                    │
          │  (Auto-detect BMC type and capabilities)     │
-         └───────┬──────────────────────┬────────────────┘
-                 │                      │
-      ┌──────────▼────────┐  ┌─────────▼──────────┐
-      │  Redfish Provider │  │  Extend Provider   │
-      │  (Standard BMCs)  │  │  (OpenBMC + OEM)   │
-      └──────────┬────────┘  └─────────┬──────────┘
-                 │                      │
-                 └──────────┬───────────┘
+         └───────┬────────────────────────┬─────────────┘
+                 │                        │
+      ┌──────────▼────────┐     ┌─────────▼──────────┐
+      │  Redfish Provider │     │  Extend Provider   │
+      │  (Standard BMCs)  │     │  (OpenBMC + OEM)   │
+      └──────────┬────────┘     └─────────┬──────────┘
+                 │                        │
+                 └──────────┬─────────────┘
                             │
                 ┌───────────▼────────────┐
                 │     BMC Hardware       │
