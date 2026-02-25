@@ -1,0 +1,68 @@
+# Gofish .gitignore
+
+# Binaries for programs and plugins
+multifish
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+*.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables and configuration files
+*.env
+.env
+.env.local
+.env.*.local
+config.yaml
+config.yml
+config.production.yaml
+config.local.yaml
+*.local.yaml
+*.local.yml
+
+# Log files and directories
+*.log
+logs/
+*.json.log
+
+# Test reports and coverage
+tests/reports/
+tests/coverage.out
+tests/coverage.html
+tests/test-output.txt
+tests/test-summary.html
+tests/test-report-detailed.html
+tests/test-results.json
+coverage.txt
+coverage.html
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+build/
+dist/
+bin/

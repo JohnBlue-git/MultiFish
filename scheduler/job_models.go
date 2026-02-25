@@ -89,6 +89,65 @@ type JobCreateRequest struct {
 	Schedule Schedule   `json:"Schedule"`
 }
 
+// UnmarshalJSON custom unmarshaler for JobCreateRequest to handle dynamic Payload type based on Action
+func (j *JobCreateRequest) UnmarshalJSON(data []byte) error {
+	// First unmarshal into a temporary structure to get the Action field
+	type Alias JobCreateRequest
+	aux := &struct {
+		Payload json.RawMessage `json:"Payload"`
+		*Alias
+	}{
+		Alias: (*Alias)(j),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Now unmarshal Payload based on Action type
+	switch j.Action {
+	case ActionPatchProfile:
+		var payload []ExecutePatchProfilePayload
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal PatchProfile payload: %w", err)
+		}
+		j.Payload = payload
+	case ActionPatchManager:
+		var payload []ExecutePatchManagerPayload
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal PatchManager payload: %w", err)
+		}
+		j.Payload = payload
+	case ActionPatchFanController:
+		var payload []ExecutePatchFanControllerPayload
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal PatchFanController payload: %w", err)
+		}
+		j.Payload = payload
+	case ActionPatchFanZone:
+		var payload []ExecutePatchFanZonePayload
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal PatchFanZone payload: %w", err)
+		}
+		j.Payload = payload
+	case ActionPatchPidController:
+		var payload []ExecutePatchPidControllerPayload
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal PatchPidController payload: %w", err)
+		}
+		j.Payload = payload
+	default:
+		// For unknown actions, leave as-is (will be caught in validation)
+		var payload interface{}
+		if err := json.Unmarshal(aux.Payload, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal payload: %w", err)
+		}
+		j.Payload = payload
+	}
+
+	return nil
+}
+
 // JobValidationResponse represents the validation response
 type JobValidationResponse struct {
 	Valid            bool                      `json:"Valid"`
