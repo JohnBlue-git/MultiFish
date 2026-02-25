@@ -43,7 +43,7 @@ MultiFish follows a modular, layered architecture designed for scalability and e
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                   REST API (Gin Framework)                       │
-│      /MultiFish/v1/{Platforms|JobService|Managers}               │
+│      /MultiFish/v1/{Platform|JobService|Managers}               │
 └────────────────┬─────────────────────────┬───────────────────────┘
                  │                         │
          ┌───────▼─────────┐       ┌──────▼────────────┐
@@ -303,8 +303,8 @@ Expected response:
   "@odata.id": "/MultiFish/v1",
   "Id": "MultiFish",
   "Name": "MultiFish Service",
-  "Platforms": {
-    "@odata.id": "/MultiFish/v1/Platforms"
+  "Platform": {
+    "@odata.id": "/MultiFish/v1/Platform"
   },
   "JobService": {
     "@odata.id": "/MultiFish/v1/JobService"
@@ -411,13 +411,13 @@ rate_limit_burst: 20     # Burst capacity
 ### Platform Management
 
 ```
-GET    /MultiFish/v1/Platforms                    # List all platforms
-POST   /MultiFish/v1/Platforms                    # Register new platform
-GET    /MultiFish/v1/Platforms/{id}               # Get platform details
-PATCH  /MultiFish/v1/Platforms/{id}               # Update platform config
-DELETE /MultiFish/v1/Platforms/{id}               # Remove platform
-GET    /MultiFish/v1/Platforms/{id}/Systems       # List systems
-GET    /MultiFish/v1/Platforms/{id}/Managers      # List managers
+GET    /MultiFish/v1/Platform                    # List all Platform
+POST   /MultiFish/v1/Platform                    # Register new platform
+GET    /MultiFish/v1/Platform/{id}               # Get platform details
+PATCH  /MultiFish/v1/Platform/{id}               # Update platform config
+DELETE /MultiFish/v1/Platform/{id}               # Remove platform
+GET    /MultiFish/v1/Platform/{id}/Systems       # List systems
+GET    /MultiFish/v1/Platform/{id}/Managers      # List managers
 ```
 
 **📚 See [PLATFORM.md](PLATFORM.md) for detailed platform management documentation including:**
@@ -430,32 +430,32 @@ GET    /MultiFish/v1/Platforms/{id}/Managers      # List managers
 ### Manager Operations
 
 ```
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}           # Get manager
-PATCH  /MultiFish/v1/Platforms/{id}/Managers/{managerId}           # Update manager
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem       # Get OEM data
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}           # Get manager
+PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}           # Update manager
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem       # Get OEM data
 ```
 
 ### OEM Extended Operations (OpenBMC)
 
 ```
 # Profile Management
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/Profile
-PATCH  /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/Profile
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/Profile
+PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/Profile
 
 # Fan Controllers
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanControllers
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanControllers/{controllerId}
-PATCH  /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanControllers/{controllerId}
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers/{controllerId}
+PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers/{controllerId}
 
 # Fan Zones
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanZones
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanZones/{zoneId}
-PATCH  /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/FanZones/{zoneId}
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones/{zoneId}
+PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones/{zoneId}
 
 # PID Controllers
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/PidControllers
-GET    /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/PidControllers/{controllerId}
-PATCH  /MultiFish/v1/Platforms/{id}/Managers/{managerId}/Oem/PidControllers/{controllerId}
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers
+GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers/{controllerId}
+PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers/{controllerId}
 ```
 
 ### Job Service
@@ -569,7 +569,7 @@ Import the Postman collection for visual, interactive API testing:
 
 ```
 1. Add a machine:
-   Platforms > Add Machine > Send
+   Platform > Add Machine > Send
 
 2. Get manager details:
    Managers > Get Manager Details > Send
@@ -590,7 +590,7 @@ Import the Postman collection for visual, interactive API testing:
 ### 1. Register a Platform
 
 ```bash
-curl -X POST http://localhost:8080/MultiFish/v1/Platforms \
+curl -X POST http://localhost:8080/MultiFish/v1/Platform \
   -H "Content-Type: application/json" \
   -d '{
     "Id": "server-1",
@@ -606,7 +606,7 @@ curl -X POST http://localhost:8080/MultiFish/v1/Platforms \
 ### 2. Update Thermal Profile
 
 ```bash
-curl -X PATCH http://localhost:8080/MultiFish/v1/Platforms/server-1/Managers/bmc/Oem/Profile \
+curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc/Oem/OpenBmc/Fan/Profile \
   -H "Content-Type: application/json" \
   -d '{
     "Profile": "Performance"
@@ -622,7 +622,7 @@ curl -X PATCH http://localhost:8080/MultiFish/v1/Platforms/server-1/Managers/bmc
 ### 3. Configure Fan Controller
 
 ```bash
-curl -X PATCH http://localhost:8080/MultiFish/v1/Platforms/server-1/Managers/bmc/Oem/FanControllers/cpu_fan \
+curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc/Oem/OpenBmc/Fan/FanControllers/cpu_fan \
   -H "Content-Type: application/json" \
   -d '{
     "Multiplier": 1.2,
@@ -634,7 +634,7 @@ curl -X PATCH http://localhost:8080/MultiFish/v1/Platforms/server-1/Managers/bmc
 ### 4. Update Manager Properties
 
 ```bash
-curl -X PATCH http://localhost:8080/MultiFish/v1/Platforms/server-1/Managers/bmc \
+curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc \
   -H "Content-Type: application/json" \
   -d '{
     "ServiceIdentification": "Production BMC v2.0"
@@ -1018,7 +1018,7 @@ curl -X PATCH http://localhost:8080/MultiFish/v1/JobService \
 
 ### Platform Configuration
 
-When registering platforms:
+When registering Platform:
 
 ```json
 {

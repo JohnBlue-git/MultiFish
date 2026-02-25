@@ -59,7 +59,7 @@
       "name": "Platform Management",
       "item": [
         {
-          "name": "List All Platforms",
+          "name": "List All Platform",
           "request": {
             "method": "GET",
             "header": [],
@@ -68,7 +68,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["Platform"]
             },
-            "description": "Get a list of all registered BMC platforms/machines"
+            "description": "Get a list of all registered BMC Platform/machines"
           }
         },
         {
@@ -245,9 +245,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/Profile",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "Profile"]
                 },
                 "description": "Get current thermal profile setting"
               }
@@ -267,9 +267,9 @@
                   "raw": "{\"Profile\": \"Performance\"}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/Profile",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "Profile"]
                 },
                 "description": "Set profile to Performance mode (maximum performance)"
               }
@@ -289,9 +289,9 @@
                   "raw": "{\"Profile\": \"Balanced\"}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/Profile",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "Profile"]
                 },
                 "description": "Set profile to Balanced mode (optimal balance)"
               }
@@ -311,9 +311,9 @@
                   "raw": "{\"Profile\": \"PowerSaver\"}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/Profile",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "Profile"]
                 },
                 "description": "Set profile to PowerSaver mode (minimize power consumption)"
               }
@@ -333,9 +333,9 @@
                   "raw": "{\"Profile\": \"Custom\"}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Profile",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/Profile",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Profile"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "Profile"]
                 },
                 "description": "Set profile to Custom mode (user-defined settings)"
               }
@@ -352,9 +352,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanControllers",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanControllers"]
                 },
                 "description": "Get collection of all fan controllers"
               }
@@ -365,9 +365,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController/{{fanControllerId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanControllers/{{fanControllerId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController", "{{fanControllerId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanControllers", "{{fanControllerId}}"]
                 },
                 "description": "Get details of a specific fan controller"
               }
@@ -387,9 +387,9 @@
                   "raw": "{\"Multiplier\": 1.2,\"StepDown\": 2,\"StepUp\": 5}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanController/{{fanControllerId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanControllers/{{fanControllerId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanController", "{{fanControllerId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanControllers", "{{fanControllerId}}"]
                 },
                 "description": "Update fan controller parameters (Multiplier, StepDown, StepUp)"
               }
@@ -406,9 +406,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanZones",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanZones"]
                 },
                 "description": "Get collection of all fan zones"
               }
@@ -419,9 +419,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone/{{fanZoneId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanZones/{{fanZoneId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone", "{{fanZoneId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanZones", "{{fanZoneId}}"]
                 },
                 "description": "Get details of a specific fan zone"
               }
@@ -441,9 +441,9 @@
                   "raw": "{\"FailSafePercent\": 100.0,\"MinThermalOutput\": 30.0}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/FanZone/{{fanZoneId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/FanZones/{{fanZoneId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "FanZone", "{{fanZoneId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "FanZones", "{{fanZoneId}}"]
                 },
                 "description": "Update fan zone configuration (FailSafePercent, MinThermalOutput)"
               }
@@ -460,9 +460,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/PidControllers",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "PidControllers"]
                 },
                 "description": "Get collection of all PID controllers"
               }
@@ -473,9 +473,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController/{{pidControllerId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/PidControllers/{{pidControllerId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController", "{{pidControllerId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "PidControllers", "{{pidControllerId}}"]
                 },
                 "description": "Get details of a specific PID controller"
               }
@@ -495,9 +495,9 @@
                   "raw": "{\"FFGainCoefficient\": 0.5,\"FFOffCoefficient\": 10.0,\"ICoefficient\": 0.1,\"ILimitMax\": 50.0,\"ILimitMin\": -50.0,\"OutLimitMax\": 100.0,\"OutLimitMin\": 0.0,\"PCoefficient\": 0.8,\"SetPoint\": 75.0,\"SlewNeg\": -5.0,\"SlewPos\": 5.0}"
                 },
                 "url": {
-                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/PidController/{{pidControllerId}}",
+                  "raw": "{{baseUrl}}/Platform/{{machineId}}/Managers/{{managerId}}/Oem/OpenBmc/Fan/PidControllers/{{pidControllerId}}",
                   "host": ["{{baseUrl}}"],
-                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "PidController", "{{pidControllerId}}"]
+                  "path": ["Platform", "{{machineId}}", "Managers", "{{managerId}}", "Oem", "OpenBmc", "Fan", "PidControllers", "{{pidControllerId}}"]
                 },
                 "description": "Update PID controller parameters (P, I, D coefficients, setpoints, limits)"
               }

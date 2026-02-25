@@ -248,9 +248,9 @@ func patchManager(c *gin.Context) {
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Profile ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Profile
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile
 func getProfile(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
@@ -272,7 +272,7 @@ func getProfile(c *gin.Context) {
 	})
 }
 
-// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Profile
+// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile
 func PatchProfile(v interface{}, patch extendprovider.PatchProfileType) (*utility.ResponseError) {
 	return managerProviders.PatchProfile(v, patch)
 }
@@ -299,15 +299,15 @@ func patchProfile(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Profile", machineID, managerID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/Profile", machineID, managerID),
 			"Message":   "Profile updated successfully",
 		})
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers
 func GetFanControllerCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetFanControllerCollectionResponse(v, machineID, managerID)
 }
@@ -330,9 +330,9 @@ func getFanControllers(c *gin.Context) {
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController/:fanControllerId ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController/:fanControllerId
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId
 func GetFanControllerResponse(v interface{}, machineID string, managerID string, fanID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetFanControllerResponse(v, machineID, managerID, fanID)
 }
@@ -356,7 +356,7 @@ func getFanController(c *gin.Context) {
 	})
 }
 
-// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController/:fanControllerId
+// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId
 func PatchFanController(v interface{}, fanControllerID string, fcPatch *extendprovider.PatchFanControllerType) (*utility.ResponseError) {
 	return managerProviders.PatchFanController(v, fanControllerID, fcPatch)
 }
@@ -384,15 +384,15 @@ func patchFanController(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanController/%s", machineID, managerID, fanControllerID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanControllers/%s", machineID, managerID, fanControllerID),
 			"Message":   "FanController updated successfully",
 		})
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones
 func GetFanZoneCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetFanZoneCollectionResponse(v, machineID, managerID)
 }
@@ -415,9 +415,9 @@ func getFanZones(c *gin.Context) {
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone/:fanZoneId ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone/:fanZoneId
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId
 func GetFanZoneResponse(v interface{}, machineID string, managerID string, zoneID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetFanZoneResponse(v, machineID, managerID, zoneID)
 }
@@ -441,7 +441,7 @@ func getFanZone(c *gin.Context) {
 	})
 }
 
-// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone/:fanZoneId
+// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId
 func PatchFanZone(v interface{}, fanZoneID string, fzPatch *extendprovider.PatchFanZoneType) (*utility.ResponseError) {
 	return managerProviders.PatchFanZone(v, fanZoneID, fzPatch)
 }
@@ -469,15 +469,15 @@ func patchFanZone(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanZone/%s", machineID, managerID, fanZoneID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanZones/%s", machineID, managerID, fanZoneID),
 			"Message":   "FanZone updated successfully",
 		})
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers
 func GetPidControllerCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetPidControllerCollectionResponse(v, machineID, managerID)
 }
@@ -500,9 +500,9 @@ func getPidControllers(c *gin.Context) {
 	})
 }
 
-// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController/:pidControllerId ==========
+// ========== /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId ==========
 
-// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController/:pidControllerId
+// GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId
 func GetPidControllerResponse(v interface{}, machineID string, managerID string, pidID string) (gin.H, *utility.ResponseError) {
 	return managerProviders.GetPidControllerResponse(v, machineID, managerID, pidID)
 }
@@ -526,7 +526,7 @@ func getPidController(c *gin.Context) {
 	})
 }
 
-// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController/:pidControllerId
+// PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId
 func PatchPidController(v interface{}, pidControllerID string, pcPatch *extendprovider.PatchPidControllerType) (*utility.ResponseError) {
 	return managerProviders.PatchPidController(v, pidControllerID, pcPatch)
 }
@@ -554,7 +554,7 @@ func patchPidController(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/PidController/%s", machineID, managerID, pidControllerID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/PidControllers/%s", machineID, managerID, pidControllerID),
 			"Message":   "PidController updated successfully",
 		})
 	})
@@ -570,21 +570,21 @@ func managerRoutes(router *gin.Engine) {
 	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId", patchManager)
 
 	// Profile routes
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Profile", getProfile)
-	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Profile", patchProfile)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile", getProfile)
+	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile", patchProfile)
 
 	// FanController routes
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController", getFanControllers)
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController/:fanControllerId", getFanController)
-	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanController/:fanControllerId", patchFanController)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers", getFanControllers)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId", getFanController)
+	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId", patchFanController)
 
 	// FanZone routes
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone", getFanZones)
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone/:fanZoneId", getFanZone)
-	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/FanZone/:fanZoneId", patchFanZone)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones", getFanZones)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId", getFanZone)
+	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId", patchFanZone)
 
 	// PidController routes
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController", getPidControllers)
-	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController/:pidControllerId", getPidController)
-	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/PidController/:pidControllerId", patchPidController)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers", getPidControllers)
+	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId", getPidController)
+	router.PATCH("/MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId", patchPidController)
 }

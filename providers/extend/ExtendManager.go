@@ -803,7 +803,7 @@ func (p *ExtendProvider) GetProfileResponse(manager interface{}, machineID, mana
 	
 	return gin.H{
 		"@odata.type":                     "#OemProfile.v1_0_0.Profile",
-		"@odata.id":                       fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Profile", machineID, managerID),
+		"@odata.id":                       fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/Profile", machineID, managerID),
 		"Profile":                         em.OpenBmcFan.Profile,
 		"Profile@Redfish.AllowableValues": em.OpenBmcFan.ProfileAllowableValues,
 	}, nil
@@ -864,14 +864,14 @@ func (p *ExtendProvider) GetFanControllerCollectionResponse(manager interface{},
 	members := make([]gin.H, 0, len(em.OpenBmcFan.FanControllers.Items))
 	for fanID := range em.OpenBmcFan.FanControllers.Items {
 		members = append(members, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanController/%s", machineID, managerID, fanID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanControllers/%s", machineID, managerID, fanID),
 		})
 	}
 	
 	// Build response
 	response := gin.H{
 		"@odata.type":         em.OpenBmcFan.FanControllers.OdataType,
-		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanController", machineID, managerID),
+		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanControllers", machineID, managerID),
 		"Id":                  "FanControllers",
 		"Members":             members,
 		"Members@odata.count": len(members),
@@ -917,7 +917,7 @@ func (p *ExtendProvider) GetFanControllerResponse(manager interface{}, machineID
 	// Build response
 	response := gin.H{
 		"@odata.type":         fc.OdataType,
-		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanController/%s", machineID, managerID, fanID),
+		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanControllers/%s", machineID, managerID, fanID),
 		"Id":                  fanID,
 		"FFGainCoefficient":   fc.FFGainCoefficient,
 		"FFOffCoefficient":    fc.FFOffCoefficient,
@@ -993,14 +993,14 @@ func (p *ExtendProvider) GetFanZoneCollectionResponse(manager interface{}, machi
 	members := make([]gin.H, 0, len(em.OpenBmcFan.FanZones.Items))
 	for zoneID := range em.OpenBmcFan.FanZones.Items {
 		members = append(members, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanZone/%s", machineID, managerID, zoneID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanZones/%s", machineID, managerID, zoneID),
 		})
 	}
 	
 	// Build response
 	response := gin.H{
 		"@odata.type":         em.OpenBmcFan.FanZones.OdataType,
-		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanZone", machineID, managerID),
+		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanZones", machineID, managerID),
 		"Id":                  "FanZones",
 		"Members":             members,
 		"Members@odata.count": len(members),
@@ -1046,7 +1046,7 @@ func (p *ExtendProvider) GetFanZoneResponse(manager interface{}, machineID, mana
 	// Build response
 	response := gin.H{
 		"@odata.type":        fz.OdataType,
-		"@odata.id":          fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/FanZone/%s", machineID, managerID, zoneID),
+		"@odata.id":          fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/FanZones/%s", machineID, managerID, zoneID),
 		"Id":                 zoneID,
 		"FailSafePercent":    fz.FailSafePercent,
 		"MinThermalOutput":   fz.MinThermalOutput,
@@ -1109,14 +1109,14 @@ func (p *ExtendProvider) GetPidControllerCollectionResponse(manager interface{},
 	members := make([]gin.H, 0, len(em.OpenBmcFan.PidControllers.Items))
 	for pidID := range em.OpenBmcFan.PidControllers.Items {
 		members = append(members, gin.H{
-			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/PidController/%s", machineID, managerID, pidID),
+			"@odata.id": fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/PidControllers/%s", machineID, managerID, pidID),
 		})
 	}
 	
 	// Build response
 	response := gin.H{
 		"@odata.type":         em.OpenBmcFan.PidControllers.OdataType,
-		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/PidController", machineID, managerID),
+		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/PidControllers", machineID, managerID),
 		"Id":                  "PidControllers",
 		"Members":             members,
 		"Members@odata.count": len(members),
@@ -1162,7 +1162,7 @@ func (p *ExtendProvider) GetPidControllerResponse(manager interface{}, machineID
 	// Build response
 	response := gin.H{
 		"@odata.type":         pc.OdataType,
-		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/PidController/%s", machineID, managerID, pidID),
+		"@odata.id":           fmt.Sprintf("/MultiFish/v1/Platform/%s/Managers/%s/Oem/OpenBmc/Fan/PidControllers/%s", machineID, managerID, pidID),
 		"Id":                  pidID,
 		"FFGainCoefficient":   pc.FFGainCoefficient,
 		"FFOffCoefficient":    pc.FFOffCoefficient,

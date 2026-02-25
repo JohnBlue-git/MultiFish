@@ -184,17 +184,17 @@ platform_examples() {  -d '{
 
       }' | jq .
 
-    # Get all platformsecho ""
+    # Get all Platformecho ""
 
-    api_call "GET" "/MultiFish/v1/Platforms" "" \
+    api_call "GET" "/MultiFish/v1/Platform" "" \
 
-        "Get all registered platforms (machines)"# 9. Get Fan Controller (replace Fan_9 with actual fan controller ID)
+        "Get all registered Platform (machines)"# 9. Get Fan Controller (replace Fan_9 with actual fan controller ID)
 
     echo "9. Getting fan controller details..."
 
     # Get specific platformcurl -s -X GET "$BASE_URL/Platform/server1/Managers/bmc/Oem/OpenBmc/FanController/Fan_9" | jq .
 
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1" "" \echo ""
+    api_call "GET" "/MultiFish/v1/Platform/machine-1" "" \echo ""
 
         "Get details for a specific platform"
 
@@ -202,7 +202,7 @@ platform_examples() {  -d '{
 
     # Get platform systemsecho "10. Updating fan controller settings..."
 
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Systems" "" \curl -s -X PATCH "$BASE_URL/Platform/server1/Managers/bmc/Oem/OpenBmc/FanController/Fan_9" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Systems" "" \curl -s -X PATCH "$BASE_URL/Platform/server1/Managers/bmc/Oem/OpenBmc/FanController/Fan_9" \
 
         "Get systems under a platform"  -H "Content-Type: application/json" \
 
@@ -210,7 +210,7 @@ platform_examples() {  -d '{
 
     # Get platform managers    "FFGainCoefficient": 1.0,
 
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers" "" \    "FFOffCoefficient": 0.0,
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers" "" \    "FFOffCoefficient": 0.0,
 
         "Get managers under a platform"    "ICoefficient": 0.0,
 
@@ -234,7 +234,7 @@ manager_examples() {    "Outputs": ["Pwm 15"],
 
     # Get manager details    "SlewNeg": 0.0,
 
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc" "" \    "SlewPos": 0.0,
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc" "" \    "SlewPos": 0.0,
 
         "Get manager details"    "Zones": [
 
@@ -248,7 +248,7 @@ manager_examples() {    "Outputs": ["Pwm 15"],
 
 }'  }' | jq .
 
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc" \echo ""
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc" \echo ""
 
         "$patch_manager_payload" \
 
@@ -258,7 +258,7 @@ manager_examples() {    "Outputs": ["Pwm 15"],
 
     # Get manager OEM datacurl -s -X PATCH "$BASE_URL/Platform/server1" \
 
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem" "" \  -H "Content-Type: application/json" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem" "" \  -H "Content-Type: application/json" \
 
         "Get manager OEM extensions"  -d '{
 
@@ -276,23 +276,17 @@ manager_examples() {    "Outputs": ["Pwm 15"],
 
 profile_examples() {# echo "12. Deleting machine..."
 
-    print_header "PROFILE MANAGEMENT (OEM Extended)"# curl -s -X DELETE "$BASE_URL/Platform/server1" | jq .
-
-    # echo ""
+    print_header "PROFILE MANAGEMENT (OEM Extended)"
 
     # Get current profile
-
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/Profile" "" \echo "==================================="
-
-        "Get current profile setting"echo "Examples completed!"
-
-    echo "==================================="
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/Profile" "" \
+        "Get current profile setting"
 
     # Patch profile to Performance
     local patch_profile_payload='{
   "Profile": "Performance"
 }'
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/Profile" \
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/Profile" \
         "$patch_profile_payload" \
         "Set profile to Performance mode"
     
@@ -300,7 +294,7 @@ profile_examples() {# echo "12. Deleting machine..."
     patch_profile_payload='{
   "Profile": "Balanced"
 }'
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/Profile" \
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/Profile" \
         "$patch_profile_payload" \
         "Set profile to Balanced mode"
     
@@ -315,11 +309,11 @@ fan_controller_examples() {
     print_header "FAN CONTROLLER MANAGEMENT (OEM Extended)"
     
     # Get fan controllers collection
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanControllers" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanControllers" "" \
         "Get all fan controllers"
     
     # Get specific fan controller
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanControllers/cpu_fan_controller" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanControllers/cpu_fan_controller" "" \
         "Get specific fan controller details"
     
     # Patch fan controller
@@ -328,7 +322,7 @@ fan_controller_examples() {
   "StepDown": 2,
   "StepUp": 5
 }'
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanControllers/cpu_fan_controller" \
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanControllers/cpu_fan_controller" \
         "$patch_fan_controller_payload" \
         "Update fan controller parameters"
 }
@@ -341,11 +335,11 @@ fan_zone_examples() {
     print_header "FAN ZONE MANAGEMENT (OEM Extended)"
     
     # Get fan zones collection
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanZones" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanZones" "" \
         "Get all fan zones"
     
     # Get specific fan zone
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanZones/cpu_zone" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanZones/cpu_zone" "" \
         "Get specific fan zone details"
     
     # Patch fan zone
@@ -353,7 +347,7 @@ fan_zone_examples() {
   "FailSafePercent": 100.0,
   "MinThermalOutput": 35.0
 }'
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/FanZones/cpu_zone" \
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/FanZones/cpu_zone" \
         "$patch_fan_zone_payload" \
         "Update fan zone configuration"
 }
@@ -366,11 +360,11 @@ pid_controller_examples() {
     print_header "PID CONTROLLER MANAGEMENT (OEM Extended)"
     
     # Get PID controllers collection
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/PidControllers" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/PidControllers" "" \
         "Get all PID controllers"
     
     # Get specific PID controller
-    api_call "GET" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/PidControllers/cpu_temp_controller" "" \
+    api_call "GET" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/PidControllers/cpu_temp_controller" "" \
         "Get specific PID controller details"
     
     # Patch PID controller
@@ -387,7 +381,7 @@ pid_controller_examples() {
   "SlewNeg": -5.0,
   "SlewPos": 5.0
 }'
-    api_call "PATCH" "/MultiFish/v1/Platforms/machine-1/Managers/bmc/Oem/PidControllers/cpu_temp_controller" \
+    api_call "PATCH" "/MultiFish/v1/Platform/machine-1/Managers/bmc/Oem/OpenBmc/Fan/PidControllers/cpu_temp_controller" \
         "$patch_pid_payload" \
         "Update PID controller parameters"
 }
@@ -575,7 +569,7 @@ main() {
     fi
     
     # Check if service is running
-    if ! curl -s "$BASE_URL/MultiFish/v1/Platforms" > /dev/null 2>&1; then
+    if ! curl -s "$BASE_URL/MultiFish/v1/Platform" > /dev/null 2>&1; then
         print_error "MultiFish service is not running at $BASE_URL"
         print_warning "Start the service with: ./multifish or go run main.go"
         exit 1
