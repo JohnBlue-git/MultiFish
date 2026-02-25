@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multifish-config
+  namespace: default
+  labels:
+    app: multifish
+data:
+  config.yaml: |
+    port: 8080
+    log_level: info
+    worker_pool_size: 100
+    logs_dir: /var/log/multifish
+    shutdown_timeout: 60
+    rate_limit_enabled: true
+    rate_limit_rate: 100.0
+    rate_limit_burst: 200
+    auth:
+      enabled: true
+      mode: token

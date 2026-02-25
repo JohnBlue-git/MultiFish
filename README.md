@@ -24,6 +24,7 @@
 - [Project Structure](#project-structure)
 - [Core Components](#core-components)
 - [Quick Start](#quick-start)
+- [Deployment](#deployment)
 - [Security](#security)
 - [API Endpoints](#api-endpoints)
 - [Usage Examples](#usage-examples)
@@ -85,29 +86,38 @@ MultiFish follows a modular, layered architecture designed for scalability and e
 ## 📁 Project Structure
 
 ```
-Gofish/
+MultiFish/
 ├── main.go                          # Application entry point
 ├── go.mod                           # Go module dependencies
 ├── go.sum                           # Dependency checksums
 │
-├── handler/                         # HTTP request handlers
-│   ├── handlePlatform.go            # Platform/machine management
-│   ├── handleJobService.go          # Job scheduling endpoints
-│   ├── handleManager.go             # Manager operation endpoints
-│   ├── handlePlatform_test.go       # Platform handler tests
-│   └── handleJobService_test.go     # Job service handler tests
-│
-├── config/                          # Configuration management
+├── README.md                        # Main project documentation
+├── DEPLOYMENT.md                    # Comprehensive deployment guide
+├── AUTHENTICATION.md                # Authentication setup guide
+├── SECURITY.md                      # Security features and best practices
 │
 ├── config.example.yaml              # Example development config
 ├── config.production.yaml           # Example production config
 ├── .env.example                     # Environment variables example
+├── .env.production.example          # Production environment template
+│
+├── multifish.sh                     # Management script for service control
+├── multifish.service                # Systemd service file
+│
+├── Dockerfile                       # Multi-stage Docker build
+├── .dockerignore                    # Docker build optimization
+├── docker-compose.yml               # Development Docker Compose
+├── docker-compose.prod.yml          # Production Docker Compose
+│
+├── handler/                         # HTTP request handlers
+│
+├── config/                          # Configuration management
 │
 ├── providers/                       # Provider architecture
 │
 ├── scheduler/                       # Job scheduling system
 │
-├── middleware/                      # HTTP middleware (auth, rate limiting)
+├── middleware/                      # HTTP middleware
 │
 ├── utility/                         # Common utilities
 │
@@ -115,7 +125,10 @@ Gofish/
 │
 ├── payloads/                        # Example payload files
 │
+├── k8s/                             # Kubernetes deployment
+│
 ├── examples.sh                      # Interactive API examples (Shell)
+│
 └── MultiFish.postman_collection.json # Postman collection (GUI)
 ```
 ## 🔧 Core Components
@@ -284,15 +297,64 @@ Comprehensive test infrastructure.
    ./multifish -config config.yaml
    ```
 
-   **Option D: With .env file**
+   **Option D: Using management script**
    ```bash
-   cp .env.example .env
-   # Edit .env with your settings
-   export $(cat .env | xargs)
-   ./multifish
+   # Make script executable
+   chmod +x multifish.sh
+   
+   # Build and start
+   ./multifish.sh build
+   ./multifish.sh start
+   
+   # With custom config
+   ./multifish.sh -c config.production.yaml start
+   
+   # Check status
+   ./multifish.sh status
    ```
 
    The service starts on the configured port (default: `http://localhost:8080`).
+
+## 🚀 Deployment
+
+MultiFish supports multiple deployment methods for different use cases:
+
+### Deployment Options
+
+| Method | Use Case | Quick Command |
+|--------|----------|---------------|
+| **Local Binary** | Development | `./multifish` |
+| **Management Script** | Development/Testing | `./multifish.sh start` |
+| **Systemd Service** | Production (Single Server) | `sudo systemctl start multifish` |
+| **Docker** | Containerized (Single Server) | `docker-compose up -d` |
+| **Kubernetes** | Production (Multi-Server) | `kubectl apply -f k8s/` |
+
+### Quick Examples
+
+**Local with management script:**
+```bash
+./multifish.sh -c config.production.yaml start
+```
+
+**Systemd service:**
+```bash
+sudo systemctl start multifish
+sudo journalctl -u multifish -f
+```
+
+**Docker Compose:**
+```bash
+docker-compose up -d
+docker-compose logs -f
+```
+
+**Kubernetes:**
+```bash
+kubectl apply -f k8s/
+kubectl get pods -l app=multifish
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive guides.
 
 ### Verify Installation
 
@@ -405,7 +467,7 @@ rate_limit_burst: 20     # Burst capacity
 
 **📚 Detailed Documentation:**
 
-- **[Authentication Guide](docs/AUTHENTICATION.md)** - Complete authentication setup and examples
+- **[Authentication Guide](AUTHENTICATION.md)** - Complete authentication setup and examples
 - **[SECURITY.md](SECURITY.md)** - Security features overview
 
 > **Note:** Certificate-based authentication (mTLS) is not supported as we don't have a PKI infrastructure to verify client certificates. Use token authentication with a reverse proxy for certificate validation if needed.
@@ -927,76 +989,6 @@ logs_dir: /var/log/multifish
 ./multifish -config config.yaml
 ```
 
-### Docker Deployment
-
-**docker-compose.yml:**
-```yaml
-version: '3.8'
-services:
-  multifish:
-    build: .
-    environment:
-      - PORT=8080
-      - LOG_LEVEL=info
-      - WORKER_POOL_SIZE=100
-      - LOGS_DIR=/app/logs
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./logs:/app/logs
-      - ./config.yaml:/app/config.yaml
-    command: ./multifish -config config.yaml
-```
-
-### Kubernetes Deployment
-
-**ConfigMap:**
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: multifish-config
-data:
-  config.yaml: |
-    port: 8080
-    log_level: info
-    worker_pool_size: 100
-    logs_dir: /var/log/multifish
-```
-
-**Deployment:**
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: multifish
-spec:
-  template:
-    spec:
-      containers:
-      - name: multifish
-        image: multifish:latest
-        env:
-        - name: PORT
-          value: "8080"
-        - name: LOG_LEVEL
-          valueFrom:
-            configMapKeyRef:
-              name: multifish-config
-              key: log_level
-        volumeMounts:
-        - name: config
-          mountPath: /etc/multifish
-        - name: logs
-          mountPath: /var/log/multifish
-      volumes:
-      - name: config
-        configMap:
-          name: multifish-config
-      - name: logs
-        emptyDir: {}
-```
-
 ### Runtime Configuration Updates
 
 Update worker pool size dynamically via API:
@@ -1008,6 +1000,19 @@ curl -X PATCH http://localhost:8080/MultiFish/v1/JobService \
     "WorkerPoolSize": 150
   }'
 ```
+
+### Container and Orchestration Deployment
+
+For production deployments using containers and orchestration:
+
+📚 **[Complete Deployment Guide](DEPLOYMENT.md)** includes:
+- **[Docker Deployment](DEPLOYMENT.md#docker-deployment)** - Dockerfile, multi-stage builds, container management
+- **[Docker Compose](DEPLOYMENT.md#docker-compose-deployment)** - Development and production compose files
+- **[Kubernetes](DEPLOYMENT.md#kubernetes-deployment)** - Complete K8s manifests, ConfigMaps, Secrets
+- **[Systemd Service](DEPLOYMENT.md#systemd-service-setup)** - Native Linux service configuration
+- **[Management Script](DEPLOYMENT.md#running-multifish)** - Using multifish.sh for service control
+
+💡 **** - Fast commands for all deployment methods
 
 **Note:** Only `WorkerPoolSize` can be updated at runtime. Other settings require restart.
 
@@ -1283,7 +1288,7 @@ Comprehensive documentation for each module:
 - **[Tests](tests/README.md)** - Testing infrastructure and guidelines
 
 ### Integration Guides
-- **[Authentication](docs/AUTHENTICATION.md)** - Complete authentication setup and examples
+- **[Authentication](AUTHENTICATION.md)** - Complete authentication setup and examples
 - **[Security](SECURITY.md)** - Security features and best practices
 
 ## 🔍 Troubleshooting
@@ -1403,6 +1408,10 @@ For issues, questions, or contributions:
 
 ## 🔗 Quick Links
 
+### Getting Started
+- **[Quick Start Guide](#quick-start)** - Get up and running in minutes
+- **[Complete Deployment Guide](DEPLOYMENT.md)** - Comprehensive deployment documentation
+
 ### Feature Documentation
 - **[Platform Management](handler/PLATFORM.md)** - Complete guide to managing BMC connections
   - Machine configuration and validation
@@ -1423,8 +1432,15 @@ For issues, questions, or contributions:
 - [Utility Module](utility/README.md) - Common utilities
 - [Testing Guide](tests/README.md) - Test infrastructure
 
+### Deployment & Operations
+- [Complete Deployment Guide](DEPLOYMENT.md) - All deployment methods
+- [Management Script Usage](DEPLOYMENT.md#using-the-management-script) - multifish.sh guide
+- [Systemd Service Setup](DEPLOYMENT.md#systemd-service-setup) - Native Linux service
+- [Docker Deployment](DEPLOYMENT.md#docker-deployment) - Container deployment
+- [Kubernetes Deployment](DEPLOYMENT.md#kubernetes-deployment) - K8s orchestration
+
 ### Guides & Examples
-- [Authentication Guide](docs/AUTHENTICATION.md) - Auth setup
+- [Authentication Guide](AUTHENTICATION.md) - Auth setup
 - [Security Guide](SECURITY.md) - Security features
 - [Examples Script](examples.sh) - Interactive CLI examples
 - [Postman Collection](MultiFish.postman_collection.json) - GUI testing

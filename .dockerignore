@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+multifish
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+tests/
+test/
+
+# Logs
+logs/
+*.log
+
+# Configuration files (copy explicitly if needed)
+config.yaml
+config.production.yaml
+*.env
+.env*
+
+# Documentation
+README.md
+docs/
+*.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Miscellaneous
+*.pid
+.tmp/
+tmp/
+temp/
+*.bak
+*.orig
+
+# Service files
+multifish.service
+multifish.sh
+
+# Postman and examples
+*.postman_collection.json
+examples.sh
+
+# Coverage reports
+coverage.out
+coverage.html

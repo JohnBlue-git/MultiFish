@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multifish-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  labels:
+    app: multifish
+spec:
+  tls:
+  - hosts:
+    - multifish.example.com
+    secretName: multifish-tls
+  rules:
+  - host: multifish.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: multifish-service
+            port:
+              number: 8080

@@ -1,36 +1,80 @@
 # MultiFish systemd service file
 # 
+# This service file supports running MultiFish with or without a configuration file.
+# It provides flexibility for different deployment scenarios.
+#
 # Installation:
-# 1. Copy this file to /etc/systemd/system/multifish.service
-# 2. Update the paths and user as needed
-# 3. Run: sudo systemctl daemon-reload
-# 4. Run: sudo systemctl enable multifish
-# 5. Run: sudo systemctl start multifish
+# 1. Update the paths and user in this file to match your setup
+# 2. Copy this file to /etc/systemd/system/multifish.service
+#    sudo cp multifish.service /etc/systemd/system/
+# 3. Reload systemd daemon
+#    sudo systemctl daemon-reload
+# 4. Enable the service to start on boot (optional)
+#    sudo systemctl enable multifish
+# 5. Start the service
+#    sudo systemctl start multifish
 #
 # Usage:
 # sudo systemctl status multifish   # Check status
 # sudo systemctl start multifish    # Start service
 # sudo systemctl stop multifish     # Stop service
 # sudo systemctl restart multifish  # Restart service
-# sudo journalctl -u multifish -f   # View logs
+# sudo systemctl enable multifish   # Enable on boot
+# sudo systemctl disable multifish  # Disable on boot
+# sudo journalctl -u multifish -f   # View logs (follow mode)
+# sudo journalctl -u multifish -n 100  # View last 100 log entries
+#
+# Configuration Options:
+# 1. Use default config.yaml in WorkingDirectory (recommended)
+# 2. Specify custom config with Environment variable
+# 3. No config file (uses built-in defaults)
 
 [Unit]
 Description=MultiFish BMC Management API
-Documentation=https://github.com/stmcginnis/gofish
-After=network.target
+Documentation=https://github.com/JohnBlue-git/MultiFish
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=yujen
 Group=yujen
-WorkingDirectory=/home/yujen/Golang/Gofish
-ExecStart=/home/yujen/Golang/Gofish/multifish
+
+# Working directory - UPDATE THIS PATH
+WorkingDirectory=/home/yujen/MultiFish
+
+# Binary path - UPDATE THIS PATH
+# Option 1: With default config.yaml (if exists in WorkingDirectory)
+ExecStart=/home/yujen/MultiFish/multifish
+
+# Option 2: With specific config file (uncomment and modify)
+# ExecStart=/home/yujen/MultiFish/multifish -config /home/yujen/MultiFish/config.production.yaml
+
+# Option 3: Without config file (uses defaults - uncomment to force)
+# ExecStart=/home/yujen/MultiFish/multifish
+
+# Environment variables (optional)
+# Uncomment to override default config location
+# Environment="MULTIFISH_CONFIG=/home/yujen/MultiFish/config.production.yaml"
+
+# Restart policy
 Restart=on-failure
 RestartSec=5s
+StartLimitBurst=3
+StartLimitIntervalSec=60s
 
 # Security settings
 NoNewPrivileges=true
 PrivateTmp=true
+ReadOnlyPaths=/
+ReadWritePaths=/home/yujen/MultiFish/logs
+ProtectSystem=strict
+ProtectHome=read-only
+
+# Resource limits (optional - adjust as needed)
+# LimitNOFILE=65536
+# MemoryMax=2G
+# CPUQuota=200%
 
 # Logging
 StandardOutput=journal
