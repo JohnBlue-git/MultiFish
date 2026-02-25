@@ -294,9 +294,9 @@ Test interactions between multiple components.# Run specific test with coverage 
 
 **Examples:**
 
-- `handleJobService_test.go` - API endpoint tests# Run specific test with HTML coverage report
+- `handler/handleJobService_test.go` - API endpoint tests# Run specific test with HTML coverage report
 
-- `handlePlatform_test.go` - Platform management tests./run_specific_test.sh ./utility TestHelpers -c -h
+- `handler/handlePlatform_test.go` - Platform management tests./run_specific_test.sh ./utility TestHelpers -c -h
 
 - `scheduler/job_service_worker_pool_test.go` - Worker pool integration```
 
@@ -488,9 +488,9 @@ func TestValidation(t *testing.T) {   ./run_all_tests.sh
 
 ## Test Coverage Goals- Root level handler tests:
 
-  - `handleJobService_test.go`
+  - `handler/handleJobService_test.go`
 
-| Package | Target Coverage | Current Status |  - `handlePlatform_test.go`
+| Package | Target Coverage | Current Status |  - `handler/handlePlatform_test.go`
 
 |---------|----------------|----------------|
 

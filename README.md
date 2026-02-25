@@ -90,10 +90,12 @@ Gofish/
 ├── go.mod                           # Go module dependencies
 ├── go.sum                           # Dependency checksums
 │
-├── handlePlatform.go                # Platform/machine management
-├── handleJobService.go              # Job scheduling endpoints
-├── handleManager.go                 # Manager operation endpoints
-├── ...                              # ...
+├── handler/                         # HTTP request handlers
+│   ├── handlePlatform.go            # Platform/machine management
+│   ├── handleJobService.go          # Job scheduling endpoints
+│   ├── handleManager.go             # Manager operation endpoints
+│   ├── handlePlatform_test.go       # Platform handler tests
+│   └── handleJobService_test.go     # Job service handler tests
 │
 ├── config/                          # Configuration management
 │
@@ -104,6 +106,8 @@ Gofish/
 ├── providers/                       # Provider architecture
 │
 ├── scheduler/                       # Job scheduling system
+│
+├── middleware/                      # HTTP middleware (auth, rate limiting)
 │
 ├── utility/                         # Common utilities
 │
@@ -118,7 +122,7 @@ Gofish/
 
 MultiFish is built around several core components that work together to provide comprehensive BMC management:
 
-### 1. **Platform Management** ([Complete Documentation](PLATFORM.md))
+### 1. **Platform Management** ([Complete Documentation](handler/PLATFORM.md))
 
 The foundation for all BMC interactions, handling connection lifecycle and machine registry.
 
@@ -139,9 +143,9 @@ The foundation for all BMC interactions, handling connection lifecycle and machi
 - Switch between service types dynamically
 - Monitor connection health
 
-📚 **[Read Full Platform Management Guide →](PLATFORM.md)**
+📚 **[Read Full Platform Management Guide →](handler/PLATFORM.md)**
 
-### 2. **Job Service** ([Complete Documentation](JOBSERVICE.md))
+### 2. **Job Service** ([Complete Documentation](handler/JOBSERVICE.md))
 
 Sophisticated scheduling system for automating BMC operations across multiple machines.
 
@@ -165,7 +169,7 @@ Sophisticated scheduling system for automating BMC operations across multiple ma
 - Monitor job execution with detailed logs
 - Dynamically adjust worker pool size
 
-📚 **[Read Full Job Service Guide →](JOBSERVICE.md)**
+📚 **[Read Full Job Service Guide →](handler/JOBSERVICE.md)**
 
 ### 3. **Providers** ([Documentation](providers/README.md))
 
@@ -420,7 +424,7 @@ GET    /MultiFish/v1/Platform/{id}/Systems       # List systems
 GET    /MultiFish/v1/Platform/{id}/Managers      # List managers
 ```
 
-**📚 See [PLATFORM.md](PLATFORM.md) for detailed platform management documentation including:**
+**📚 See [PLATFORM.md](handler/PLATFORM.md) for detailed platform management documentation including:**
 - Machine configuration options and validation
 - Service types (Base vs Extend)
 - Connection lifecycle management
@@ -472,7 +476,7 @@ POST   /MultiFish/v1/JobService/Jobs/{jobId}/Actions/Trigger  # Trigger immediat
 POST   /MultiFish/v1/JobService/Jobs/{jobId}/Actions/Cancel   # Cancel job
 ```
 
-**📚 See [JOBSERVICE.md](JOBSERVICE.md) for comprehensive job scheduling documentation including:**
+**📚 See [JOBSERVICE.md](handler/JOBSERVICE.md) for comprehensive job scheduling documentation including:**
 - Schedule types (Once vs Continuous)
 - Supported actions and payloads
 - Worker pool configuration and sizing
@@ -685,7 +689,7 @@ curl -X POST http://localhost:8080/MultiFish/v1/JobService/Jobs \
 - ✅ **Validation**: Schedule, payload, and machine validation
 - 🎯 **Multi-machine**: Execute across multiple BMCs simultaneously
 
-**📚 For complete job scheduling documentation, see [JOBSERVICE.md](JOBSERVICE.md)**
+**📚 For complete job scheduling documentation, see [JOBSERVICE.md](handler/JOBSERVICE.md)**
 
 **Topics covered:**
 - Schedule types and patterns (Once, Continuous, Daily, Weekly, Monthly)
@@ -1070,7 +1074,7 @@ Configure via `LOG_LEVEL` environment variable or `log_level` in config file:
 ```json
 {"level":"info","time":"2024-02-09T14:15:00Z","caller":"main.go:42","message":"Configuration loaded","port":8080,"logLevel":"info","workerPoolSize":99}
 {"level":"info","time":"2024-02-09T14:15:01Z","caller":"main.go:88","message":"MultiFish API server starting","address":":8080"}
-{"level":"info","time":"2024-02-09T14:16:00Z","caller":"handlePlatform.go:140","message":"Added machine","machineID":"machine1","endpoint":"https://bmc1","type":"ExtendService"}
+{"level":"info","time":"2024-02-09T14:16:00Z","caller":"handler/handlePlatform.go:140","message":"Added machine","machineID":"machine1","endpoint":"https://bmc1","type":"ExtendService"}
 {"level":"info","time":"2024-02-09T14:17:00Z","caller":"job_service.go:118","message":"Job created","jobID":"Job-1707489234567890","nextRun":"2024-02-09T20:00:00Z"}
 ```
 
@@ -1268,8 +1272,8 @@ open tests/reports/coverage_*.html
 Comprehensive documentation for each module:
 
 ### Core Features
-- **[Platform Management](PLATFORM.md)** - BMC connection management, machine registration, service types, and API reference
-- **[Job Service](JOBSERVICE.md)** - Job scheduling, automation, worker pools, and execution logging
+- **[Platform Management](handler/PLATFORM.md)** - BMC connection management, machine registration, service types, and API reference
+- **[Job Service](handler/JOBSERVICE.md)** - Job scheduling, automation, worker pools, and execution logging
 
 ### Internal Modules
 - **[Config](config/README.md)** - Configuration management and environment variables
@@ -1394,19 +1398,19 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 For issues, questions, or contributions:
 - Check the [module documentation](#module-documentation)
 - Review [examples](examples.sh) and [payloads](payloads/)
-- Read feature guides: [Platform Management](PLATFORM.md) | [Job Service](JOBSERVICE.md)
+- Read feature guides: [Platform Management](handler/PLATFORM.md) | [Job Service](handler/JOBSERVICE.md)
 - Open an issue on the repository
 
 ## 🔗 Quick Links
 
 ### Feature Documentation
-- **[Platform Management](PLATFORM.md)** - Complete guide to managing BMC connections
+- **[Platform Management](handler/PLATFORM.md)** - Complete guide to managing BMC connections
   - Machine configuration and validation
   - Service types (Base vs Extend)
   - Connection lifecycle
   - API reference with examples
   
-- **[Job Service](JOBSERVICE.md)** - Comprehensive job scheduling guide
+- **[Job Service](handler/JOBSERVICE.md)** - Comprehensive job scheduling guide
   - Schedule types and patterns
   - All supported actions
   - Worker pool configuration

@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -88,11 +88,11 @@ func getJobServiceRoot(c *gin.Context) {
 			"@odata.id": "/MultiFish/v1/JobService/Jobs",
 		},
 		"ServiceCapabilities": gin.H{
-			"WorkerPoolSize":    jobService.GetWorkerPoolSize(),
-			"ActiveWorkers":     jobService.GetActiveWorkers(),
-			"AvailableWorkers":  jobService.GetAvailableWorkers(),
-			"TotalJobs":         jobService.GetJobCount(),
-			"RunningJobs":       jobService.GetRunningJobsCount(),
+			"WorkerPoolSize":    JobService.GetWorkerPoolSize(),
+			"ActiveWorkers":     JobService.GetActiveWorkers(),
+			"AvailableWorkers":  JobService.GetAvailableWorkers(),
+			"TotalJobs":         JobService.GetJobCount(),
+			"RunningJobs":       JobService.GetRunningJobsCount(),
 		},
 	})
 }
@@ -116,7 +116,7 @@ func patchJobServiceRoot(c *gin.Context) {
 	if req.ServiceCapabilities != nil && req.ServiceCapabilities.WorkerPoolSize != nil {
 		newSize := *req.ServiceCapabilities.WorkerPoolSize
 
-		if err := jobService.SetWorkerPoolSize(newSize); err != nil {
+		if err := JobService.SetWorkerPoolSize(newSize); err != nil {
 			utility.RedfishError(c, http.StatusBadRequest,
 				fmt.Sprintf("Invalid WorkerPoolSize: %v", err),
 				"PropertyValueNotInList")
@@ -130,7 +130,7 @@ func patchJobServiceRoot(c *gin.Context) {
 
 // GET /MultiFish/v1/JobService/Jobs - Get jobs collection
 func getJobsCollection(c *gin.Context) {
-	jobs := jobService.ListJobs()
+	jobs := JobService.ListJobs()
 
 	members := make([]gin.H, len(jobs))
 	for i, job := range jobs {
@@ -160,7 +160,7 @@ func createJob(c *gin.Context) {
 	}
 
 	// Create the job
-	job, validationResp, err := jobService.CreateJob(&req)
+	job, validationResp, err := JobService.CreateJob(&req)
 
 	// If validation failed, return detailed error
 	if err != nil {
@@ -197,7 +197,7 @@ func createJob(c *gin.Context) {
 func getJob(c *gin.Context) {
 	jobID := c.Param("jobId")
 
-	job, err := jobService.GetJob(jobID)
+	job, err := JobService.GetJob(jobID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound,
 			fmt.Sprintf("Job not found: %s", jobID),
@@ -212,7 +212,7 @@ func getJob(c *gin.Context) {
 func deleteJob(c *gin.Context) {
 	jobID := c.Param("jobId")
 
-	if err := jobService.DeleteJob(jobID); err != nil {
+	if err := JobService.DeleteJob(jobID); err != nil {
 		utility.RedfishError(c, http.StatusNotFound,
 			fmt.Sprintf("Job not found: %s", jobID),
 			"ResourceNotFound")
@@ -228,7 +228,7 @@ func deleteJob(c *gin.Context) {
 func cancelJob(c *gin.Context) {
 	jobID := c.Param("jobId")
 
-	if err := jobService.CancelJob(jobID); err != nil {
+	if err := JobService.CancelJob(jobID); err != nil {
 		utility.RedfishError(c, http.StatusNotFound,
 			fmt.Sprintf("Job not found: %s", jobID),
 			"ResourceNotFound")
@@ -242,11 +242,11 @@ func cancelJob(c *gin.Context) {
 
 // ========== Job Service Initialization ==========
 
-// Global job service instance
-var jobService *scheduler.JobService
+// JobService is the global job service instance
+var JobService *scheduler.JobService
 
-// Initialize job service
-func initJobService(cfg *config.Config) {
+// InitJobService initializes the job service
+func InitJobService(cfg *config.Config) {
 	log := utility.GetLogger()
 	
 	// Set logs directory from configuration
@@ -255,7 +255,7 @@ func initJobService(cfg *config.Config) {
 	}
 	
 	// Create adapter for platform manager
-	platformAdapter := NewPlatformManagerAdapter(platformMgr)
+	platformAdapter := NewPlatformManagerAdapter(PlatformMgr)
 	
 	// Create validator and executor
 	validator := scheduler.NewPlatformValidator(platformAdapter)
@@ -264,19 +264,19 @@ func initJobService(cfg *config.Config) {
 	executor := scheduler.NewPlatformExecutor(platformAdapter, actionExecutor)
 
 	// Create job service with configured worker pool size
-	jobService = scheduler.NewJobService(validator, executor)
+	JobService = scheduler.NewJobService(validator, executor)
 	
 	// Set worker pool size from configuration
-	if err := jobService.SetWorkerPoolSize(cfg.WorkerPoolSize); err != nil {
+	if err := JobService.SetWorkerPoolSize(cfg.WorkerPoolSize); err != nil {
 		log.Warn().Err(err).Msg("Failed to set worker pool size")
 	}
 }
 
 // ========== Job Service Routes ==========
 
-func jobServiceRoutes(router *gin.Engine, cfg *config.Config) {
+func JobServiceRoutes(router *gin.Engine, cfg *config.Config) {
 	// Initialize job service with configuration
-	initJobService(cfg)
+	InitJobService(cfg)
 
 	// JobService root
 	router.GET("/MultiFish/v1/JobService", getJobServiceRoot)

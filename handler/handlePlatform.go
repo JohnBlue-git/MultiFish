@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"crypto/tls"
@@ -31,8 +31,8 @@ func (pma *PlatformManagerAdapter) GetMachine(machineID string) (interface{}, er
 	return pma.mgr.GetMachineInterface(machineID)
 }
 
-// getService retrieves the appropriate service interface based on the machine's service type
-func getService(machine *MachineConnection) (interface{}, *utility.ResponseError) {
+// GetService retrieves the appropriate service interface based on the machine's service type
+func GetService(machine *MachineConnection) (interface{}, *utility.ResponseError) {
 	log := utility.GetLogger()
 
 	switch {
@@ -98,8 +98,8 @@ type PlatformManager struct {
 	mu       sync.RWMutex
 }
 
-// Global platform manager
-var platformMgr = &PlatformManager{
+// PlatformMgr is the global platform manager
+var PlatformMgr = &PlatformManager{
 	machines: make(map[string]*MachineConnection),
 }
 
@@ -290,7 +290,7 @@ func (pm *PlatformManager) CleanupAll() {
 
 // GET /MultiFish/v1/Platform - List all machines
 func getPlatform(c *gin.Context) {
-	machines := platformMgr.ListMachines()
+	machines := PlatformMgr.ListMachines()
 	
 	members := make([]map[string]string, len(machines))
 	for i, machine := range machines {
@@ -321,7 +321,7 @@ func addMachine(c *gin.Context) {
 		return
 	}
 
-	if err := platformMgr.AddMachine(config); err != nil {
+	if err := PlatformMgr.AddMachine(config); err != nil {
 		utility.RedfishError(c, http.StatusInternalServerError, err.Error(), "InternalError")
 		return
 	}
@@ -338,7 +338,7 @@ func addMachine(c *gin.Context) {
 func getMachine(c *gin.Context) {
 	machineID := c.Param("machineId")
 	
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -419,14 +419,14 @@ func updateMachine(c *gin.Context) {
 		return
 	}
 
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
 	}
 
 	// Update configuration
-	platformMgr.mu.Lock()
+	PlatformMgr.mu.Lock()
 	needsReconnect := false
 	
 	if updates.Endpoint != nil && *updates.Endpoint != machine.Config.Endpoint {
@@ -463,7 +463,7 @@ func updateMachine(c *gin.Context) {
 			}
 		}
 		if !validType {
-			platformMgr.mu.Unlock()
+			PlatformMgr.mu.Unlock()
 			utility.RedfishError(c, http.StatusBadRequest, 
 				fmt.Sprintf("Invalid Type '%s', must be one of: %v", *updates.Type, machine.Config.TypeAllowableValues),
 				"InvalidValue")
@@ -472,7 +472,7 @@ func updateMachine(c *gin.Context) {
 		machine.Config.Type = *updates.Type
 		needsReconnect = true
 	}
-	platformMgr.mu.Unlock()
+	PlatformMgr.mu.Unlock()
 
 	// If critical settings changed, suggest reconnection
 	message := "Configuration updated successfully"
@@ -491,7 +491,7 @@ func updateMachine(c *gin.Context) {
 func deleteMachine(c *gin.Context) {
 	machineID := c.Param("machineId")
 	
-	if err := platformMgr.RemoveMachine(machineID); err != nil {
+	if err := PlatformMgr.RemoveMachine(machineID); err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
 	}
@@ -503,8 +503,8 @@ func deleteMachine(c *gin.Context) {
 
 // ========== Route Setup ==========
 
-// platformRoutes sets up the platform-related routes
-func platformRoutes(router *gin.Engine) {
+// PlatformRoutes sets up the platform-related routes
+func PlatformRoutes(router *gin.Engine) {
 	router.GET("/MultiFish/v1/Platform", getPlatform)
 	router.POST("/MultiFish/v1/Platform", addMachine)
 	router.GET("/MultiFish/v1/Platform/:machineId", getMachine)

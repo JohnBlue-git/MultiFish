@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -14,21 +14,21 @@ import (
 	extendprovider "multifish/providers/extend"
 )
 
-// Global manager provider registry
-var managerProviders *providers.ManagerRegistry
+// ManagerProviders is the global manager provider registry
+var ManagerProviders *providers.ManagerRegistry
 
 // init registers all manager providers
 func init() {
-	managerProviders = providers.NewManagerRegistry()
+	ManagerProviders = providers.NewManagerRegistry()
 	
 	// Register providers in order of preference
 	// Extended managers should be checked before base redfish managers
-	managerProviders.Register(&extendprovider.ExtendProvider{})
-	managerProviders.Register(&redfishprovider.RedfishProvider{})
+	ManagerProviders.Register(&extendprovider.ExtendProvider{})
+	ManagerProviders.Register(&redfishprovider.RedfishProvider{})
 	
 	// Future: Add more providers here
-	// managerProviders.Register(&dellprovider.DellProvider{})
-	// managerProviders.Register(&hpprovider.HPProvider{})
+	// ManagerProviders.Register(&dellprovider.DellProvider{})
+	// ManagerProviders.Register(&hpprovider.HPProvider{})
 }
 
 // ========== Helper type for manager callback ==========
@@ -39,7 +39,7 @@ func getManagerByService(machine *MachineConnection, managerID string) (interfac
 	log := utility.GetLogger()
 
 	// Get the service for the machine
-	service, err := getService(machine)
+	service, err := GetService(machine)
 	if err != nil {
 		log.Error().Msgf("failed to get service for machine %s: %v", machine.Config.ID, err)
 		return nil, err
@@ -171,11 +171,11 @@ func (m *MachineActionExecutorAdapter) PatchPidController(manager interface{}, p
 
 // GET /MultiFish/v1/Platform/:machineId/Managers - Get managers collection 
 func GetManagerCollectionResponse(v interface{}, machineID string) (gin.H, error) {
-	return managerProviders.GetManagerCollectionResponse(v, machineID)
+	return ManagerProviders.GetManagerCollectionResponse(v, machineID)
 }
 func getManagers(c *gin.Context) {
 	machineID := c.Param("machineId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -195,12 +195,12 @@ func getManagers(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId - Get manager details
 func GetManagerResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetManagerResponse(v, machineID, managerID)
+	return ManagerProviders.GetManagerResponse(v, machineID, managerID)
 }
 func getManager(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -218,12 +218,12 @@ func getManager(c *gin.Context) {
 
 // PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId - Update manager (ServiceIdentification)
 func PatchManager(v interface{}, patch interface{}) (*utility.ResponseError) {
-	return managerProviders.PatchManager(v, patch)
+	return ManagerProviders.PatchManager(v, patch)
 }
 func patchManager(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -237,7 +237,7 @@ func patchManager(c *gin.Context) {
 
 	getManagersCallback(c, machine, managerID, func(targetManager interface{}) {
 
-		if respErr := managerProviders.PatchManager(targetManager, &updates); respErr != nil {
+		if respErr := ManagerProviders.PatchManager(targetManager, &updates); respErr != nil {
 			utility.RedfishError(c, respErr.StatusCode, respErr.Error.Error(), respErr.Message)
 		}
 
@@ -254,7 +254,7 @@ func patchManager(c *gin.Context) {
 func getProfile(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -263,7 +263,7 @@ func getProfile(c *gin.Context) {
 	getManagersCallback(c, machine, managerID, func(targetManager interface{}) {
 		var response interface{}
 		var respErr *utility.ResponseError
-		response, respErr = managerProviders.GetProfileResponse(targetManager, machineID, managerID)
+		response, respErr = ManagerProviders.GetProfileResponse(targetManager, machineID, managerID)
 		if respErr != nil {
 			utility.RedfishError(c, respErr.StatusCode, respErr.Error.Error(), respErr.Message)
 			return
@@ -274,12 +274,12 @@ func getProfile(c *gin.Context) {
 
 // PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/Profile
 func PatchProfile(v interface{}, patch extendprovider.PatchProfileType) (*utility.ResponseError) {
-	return managerProviders.PatchProfile(v, patch)
+	return ManagerProviders.PatchProfile(v, patch)
 }
 func patchProfile(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -293,7 +293,7 @@ func patchProfile(c *gin.Context) {
 
 	getManagersCallback(c, machine, managerID, func(targetManager interface{}) {
 
-		if respErr := managerProviders.PatchProfile(targetManager, updates); respErr != nil {
+		if respErr := ManagerProviders.PatchProfile(targetManager, updates); respErr != nil {
 			utility.RedfishError(c, respErr.StatusCode, fmt.Sprintf("Failed to patch profile: %v", respErr.Error), respErr.Message)
 			return
 		}
@@ -309,12 +309,12 @@ func patchProfile(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers
 func GetFanControllerCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetFanControllerCollectionResponse(v, machineID, managerID)
+	return ManagerProviders.GetFanControllerCollectionResponse(v, machineID, managerID)
 }
 func getFanControllers(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -334,13 +334,13 @@ func getFanControllers(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId
 func GetFanControllerResponse(v interface{}, machineID string, managerID string, fanID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetFanControllerResponse(v, machineID, managerID, fanID)
+	return ManagerProviders.GetFanControllerResponse(v, machineID, managerID, fanID)
 }
 func getFanController(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")	
 	fanControllerID := c.Param("fanControllerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -358,13 +358,13 @@ func getFanController(c *gin.Context) {
 
 // PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanControllers/:fanControllerId
 func PatchFanController(v interface{}, fanControllerID string, fcPatch *extendprovider.PatchFanControllerType) (*utility.ResponseError) {
-	return managerProviders.PatchFanController(v, fanControllerID, fcPatch)
+	return ManagerProviders.PatchFanController(v, fanControllerID, fcPatch)
 }
 func patchFanController(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
 	fanControllerID := c.Param("fanControllerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -394,12 +394,12 @@ func patchFanController(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones
 func GetFanZoneCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetFanZoneCollectionResponse(v, machineID, managerID)
+	return ManagerProviders.GetFanZoneCollectionResponse(v, machineID, managerID)
 }
 func getFanZones(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -419,13 +419,13 @@ func getFanZones(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId
 func GetFanZoneResponse(v interface{}, machineID string, managerID string, zoneID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetFanZoneResponse(v, machineID, managerID, zoneID)
+	return ManagerProviders.GetFanZoneResponse(v, machineID, managerID, zoneID)
 }
 func getFanZone(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")	
 	fanZoneID := c.Param("fanZoneId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -443,13 +443,13 @@ func getFanZone(c *gin.Context) {
 
 // PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/FanZones/:fanZoneId
 func PatchFanZone(v interface{}, fanZoneID string, fzPatch *extendprovider.PatchFanZoneType) (*utility.ResponseError) {
-	return managerProviders.PatchFanZone(v, fanZoneID, fzPatch)
+	return ManagerProviders.PatchFanZone(v, fanZoneID, fzPatch)
 }
 func patchFanZone(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
 	fanZoneID := c.Param("fanZoneId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -479,12 +479,12 @@ func patchFanZone(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers
 func GetPidControllerCollectionResponse(v interface{}, machineID string, managerID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetPidControllerCollectionResponse(v, machineID, managerID)
+	return ManagerProviders.GetPidControllerCollectionResponse(v, machineID, managerID)
 }
 func getPidControllers(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -504,13 +504,13 @@ func getPidControllers(c *gin.Context) {
 
 // GET /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId
 func GetPidControllerResponse(v interface{}, machineID string, managerID string, pidID string) (gin.H, *utility.ResponseError) {
-	return managerProviders.GetPidControllerResponse(v, machineID, managerID, pidID)
+	return ManagerProviders.GetPidControllerResponse(v, machineID, managerID, pidID)
 }
 func getPidController(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")	
 	pidControllerID := c.Param("pidControllerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -528,13 +528,13 @@ func getPidController(c *gin.Context) {
 
 // PATCH /MultiFish/v1/Platform/:machineId/Managers/:managerId/Oem/OpenBmc/Fan/PidControllers/:pidControllerId
 func PatchPidController(v interface{}, pidControllerID string, pcPatch *extendprovider.PatchPidControllerType) (*utility.ResponseError) {
-	return managerProviders.PatchPidController(v, pidControllerID, pcPatch)
+	return ManagerProviders.PatchPidController(v, pidControllerID, pcPatch)
 }
 func patchPidController(c *gin.Context) {
 	machineID := c.Param("machineId")
 	managerID := c.Param("managerId")
 	pidControllerID := c.Param("pidControllerId")
-	machine, err := platformMgr.GetMachine(machineID)
+	machine, err := PlatformMgr.GetMachine(machineID)
 	if err != nil {
 		utility.RedfishError(c, http.StatusNotFound, err.Error(), "ResourceNotFound")
 		return
@@ -562,8 +562,8 @@ func patchPidController(c *gin.Context) {
 
 // ========== Route Setup ==========
 
-// managerRoutes sets up the manager-related routes
-func managerRoutes(router *gin.Engine) {
+// ManagerRoutes sets up the manager-related routes
+func ManagerRoutes(router *gin.Engine) {
 	// Manager routes
 	router.GET("/MultiFish/v1/Platform/:machineId/Managers", getManagers)
 	router.GET("/MultiFish/v1/Platform/:machineId/Managers/:managerId", getManager)

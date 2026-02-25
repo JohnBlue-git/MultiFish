@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ func setupJobServiceTestRouter() *gin.Engine {
 	router := gin.Default()
 
 	// Initialize platform manager (required for job service)
-	platformMgr = &PlatformManager{
+	PlatformMgr = &PlatformManager{
 		machines: make(map[string]*MachineConnection),
 	}
 
@@ -57,7 +57,7 @@ _ = testMachine2
 cfg := config.DefaultConfig()
 
 // Setup job service routes
-jobServiceRoutes(router, cfg)
+JobServiceRoutes(router, cfg)
 
 return router
 }

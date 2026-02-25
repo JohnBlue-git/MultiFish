@@ -112,13 +112,13 @@ func MaskPassword(password string) string {
 
 #### a) List Machines Endpoint
 - **Endpoint**: `GET /MultiFish/v1/Platform`
-- **File**: `handlePlatform.go`
+- **File**: `handler/handlePlatform.go`
 - **Function**: `ListMachines()`
 - **Protection**: All machine passwords are masked before returning the list
 
 #### b) Get Machine Details Endpoint
 - **Endpoint**: `GET /MultiFish/v1/Platform/:machineId`
-- **File**: `handlePlatform.go`
+- **File**: `handler/handlePlatform.go`
 - **Function**: `getMachine()`
 - **Protection**: Password field in Connection object is masked
 

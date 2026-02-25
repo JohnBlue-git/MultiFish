@@ -13,6 +13,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"multifish/config"
+	"multifish/handler"
 	"multifish/middleware"
 	"multifish/utility"
 )
@@ -104,13 +105,13 @@ func main() {
 	})
 
 	// Platform routes
-	platformRoutes(router)
+	handler.PlatformRoutes(router)
 
 	// Job service routes (now uses config for worker pool size)
-	jobServiceRoutes(router, cfg)
+	handler.JobServiceRoutes(router, cfg)
 
 	// Manager routes
-	managerRoutes(router)
+	handler.ManagerRoutes(router)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -134,12 +135,12 @@ func main() {
 
 	// Cleanup all machines and close connections
 	log.Info().Msg("Cleaning up machine connections...")
-	platformMgr.CleanupAll()
+	handler.PlatformMgr.CleanupAll()
 
 	// Stop job scheduler
 	log.Info().Msg("Stopping job scheduler...")
-	if jobService != nil {
-		jobService.Stop()
+	if handler.JobService != nil {
+		handler.JobService.Stop()
 	}
 
 	// Graceful shutdown with configurable timeout

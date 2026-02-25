@@ -400,8 +400,8 @@ Provider executes operation
 
 **Example:**
 ```go
-// In handleManager.go
-provider := managerProviders.FindProvider(manager)
+// In handler/handleManager.go
+provider := ManagerProviders.FindProvider(manager)
 if provider == nil {
     return error("no suitable provider found")
 }
