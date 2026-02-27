@@ -1,37 +1,37 @@
-# Security Improvements Documentation
+# MultiFish Security Guide
 
-This document describes the security enhancements implemented in the MultiFish application.
+This document is the single source of truth for MultiFish security configuration and operations.
 
 ## Overview
 
-Three major security improvements have been implemented:
-1. **Authentication & Authorization**: Flexible authentication with multiple modes
-2. **Password Masking**: Ensures passwords are never exposed in API responses
-3. **Rate Limiting**: Protects the API from abuse and DoS attacks
+MultiFish security focuses on three core controls:
+
+1. Authentication & authorization
+2. Password masking in API responses
+3. Per-IP rate limiting
 
 ---
 
-## 1. Authentication & Authorization
+## 1) Authentication & Authorization
 
-### Overview
+### Supported Modes
 
-MultiFish supports flexible authentication to secure API endpoints. You can choose from:
-- **No Authentication** (`none`) - For development/trusted networks
-- **Basic Authentication** (`basic`) - Username/password authentication
-- **Token Authentication** (`token`) - Bearer token-based authentication
+- `none`: No authentication (development only)
+- `basic`: HTTP Basic authentication
+- `token`: Bearer token authentication (recommended for production)
 
-📖 **[Full Authentication Guide](docs/AUTHENTICATION.md)** - Comprehensive documentation with examples
+### Quick Start
 
-### Quick Configuration
+Disable auth (development):
 
-**Disable Authentication (Development)**:
 ```yaml
 auth:
   enabled: false
   mode: none
 ```
 
-**Enable Basic Authentication**:
+Enable basic auth:
+
 ```yaml
 auth:
   enabled: true
@@ -41,365 +41,231 @@ auth:
     password: "your-secure-password"
 ```
 
-**Enable Token Authentication (Recommended for Production)**:
+Enable token auth:
+
 ```yaml
 auth:
   enabled: true
   mode: token
   token_auth:
     tokens:
-      - "your-secret-token-here"
+      - "token-1"
+      - "token-2"
 ```
 
 ### Environment Variables
 
 ```bash
-# Enable authentication
 export AUTH_ENABLED=true
 export AUTH_MODE=token
 export TOKEN_AUTH_TOKENS="token1,token2,token3"
 
-# Or for basic auth
-export AUTH_MODE=basic
-export BASIC_AUTH_USERNAME=admin
-export BASIC_AUTH_PASSWORD=secret123
+# Basic auth alternative
+# export AUTH_MODE=basic
+# export BASIC_AUTH_USERNAME=admin
+# export BASIC_AUTH_PASSWORD=secret123
 ```
+
+### Configuration Priority
+
+Configuration is loaded in this order:
+
+1. Environment variables
+2. YAML configuration file
+3. Built-in defaults
 
 ### API Usage Examples
 
-**With Token Auth**:
+Token auth:
+
 ```bash
 curl -H "Authorization: Bearer your-token" \
-     http://localhost:8080/MultiFish/v1
+  http://localhost:8080/MultiFish/v1
 ```
 
-**With Basic Auth**:
+Basic auth:
+
 ```bash
 curl -u admin:password \
-     http://localhost:8080/MultiFish/v1
+  http://localhost:8080/MultiFish/v1
 ```
 
-### Security Notes
+### Deployment Examples
 
-- ⚠️ **Certificate authentication (mTLS) is NOT supported** - We don't have a PKI infrastructure to verify client certificates
-- Use HTTPS in production (via reverse proxy)
+Systemd:
+
+```ini
+[Service]
+Environment="AUTH_ENABLED=true"
+Environment="AUTH_MODE=token"
+Environment="TOKEN_AUTH_TOKENS=your-production-token"
+```
+
+Docker:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e AUTH_ENABLED=true \
+  -e AUTH_MODE=token \
+  -e TOKEN_AUTH_TOKENS=docker-token-123 \
+  multifish:latest
+```
+
+Kubernetes (manifests default to disabled auth; enable by command):
+
+```bash
+TOKEN1=$(openssl rand -hex 32)
+TOKEN2=$(openssl rand -hex 32)
+
+kubectl -n default create secret generic multifish-secret \
+  --from-literal=auth-tokens="$TOKEN1,$TOKEN2" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n default set env deployment/multifish \
+  AUTH_ENABLED=true \
+  AUTH_MODE=token \
+  TOKEN_AUTH_TOKENS="$TOKEN1,$TOKEN2"
+```
+
+### Authentication Best Practices
+
+- Enable authentication in production
+- Use token mode for production workloads
+- Use environment variables / secret manager for secrets
+- Use HTTPS via reverse proxy
 - Rotate tokens regularly
-- Never commit credentials to version control
-- Use environment variables for sensitive values
+- Use different tokens per client/integration
 
-See **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)** for detailed configuration, examples, and best practices.
+Generate secure token:
+
+```bash
+openssl rand -hex 32
+```
+
+### Authentication Troubleshooting
+
+If you receive `401 Unauthorized`:
+
+1. Verify auth mode and enabled flag
+2. Verify header format
+   - Basic: `Authorization: Basic <base64(username:password)>`
+   - Token: `Authorization: Bearer <token>`
+3. Verify token/credential matches runtime config
+4. Check service logs
+
+Useful checks:
+
+```bash
+curl -v -H "Authorization: Bearer your-token" \
+  http://localhost:8080/MultiFish/v1
+```
+
+```bash
+journalctl -u multifish -n 100
+```
+
+### Authentication Limitations
+
+Current authentication model does **not** include:
+
+- mTLS / certificate authentication
+- OAuth2 / OpenID Connect
+- JWT expiration/refresh flow
+- RBAC (all authenticated users share same access scope)
+- Per-user rate limits (rate limit is per IP)
+
+For certificate-based client auth, use reverse proxy mTLS (nginx/Envoy) in front of MultiFish.
 
 ---
 
-## 2. Password Masking
+## 2) Password Masking
 
 ### Implementation
 
-A utility function has been created to consistently mask passwords across all API responses:
+Passwords are masked before API responses are returned.
 
-**Location**: `utility/security.go`
+- File: `utility/security.go`
+- Function: `MaskPassword(password string) string`
 
-```go
-func MaskPassword(password string) string {
-    if password == "" {
-        return ""
-    }
-    return "******"
-}
-```
+### Protected Endpoints
 
-### Where Password Masking is Applied
+- `GET /MultiFish/v1/Platform`
+- `GET /MultiFish/v1/Platform/:machineId`
 
-#### a) List Machines Endpoint
-- **Endpoint**: `GET /MultiFish/v1/Platform`
-- **File**: `handler/handlePlatform.go`
-- **Function**: `ListMachines()`
-- **Protection**: All machine passwords are masked before returning the list
+### Validation
 
-#### b) Get Machine Details Endpoint
-- **Endpoint**: `GET /MultiFish/v1/Platform/:machineId`
-- **File**: `handler/handlePlatform.go`
-- **Function**: `getMachine()`
-- **Protection**: Password field in Connection object is masked
-
-### Testing
-
-Tests are provided in `utility/security_test.go` to ensure:
-- Passwords are consistently masked
-- Empty passwords are handled correctly
-- The masking function is deterministic
+- Tests: `utility/security_test.go`
+- Ensures deterministic masking and safe handling of empty passwords
 
 ### Best Practices
 
-✅ **DO**:
-- Always use `utility.MaskPassword()` when returning machine configurations
-- Apply masking at the response layer, not data storage layer
-- Test all endpoints that might expose credentials
+Do:
+- Always mask response-layer secrets
+- Keep raw secrets only where operationally required
 
-❌ **DON'T**:
-- Store masked passwords in the database/configuration
-- Hardcode the mask string "******" directly
-- Expose passwords in logs or error messages
+Don't:
+- Log credentials/tokens
+- Store masked values as canonical data
 
 ---
 
-## 3. Rate Limiting
+## 3) Rate Limiting
 
 ### Implementation
 
-A token bucket rate limiter has been implemented to protect against API abuse:
+Token-bucket, per-IP rate limiting middleware.
 
-**Location**: `middleware/ratelimit.go`
-
-### Features
-
-- **Per-IP Rate Limiting**: Each client IP has its own rate limit
-- **Configurable Limits**: Rate and burst size can be configured
-- **Token Bucket Algorithm**: Allows short bursts while maintaining average rate
-- **Automatic Cleanup**: Prevents memory leaks from stale entries
+- File: `middleware/ratelimit.go`
 
 ### Configuration
 
-Rate limiting can be configured via:
+YAML:
 
-#### 1. Configuration File (YAML)
 ```yaml
-# config.example.yaml
 rate_limit_enabled: true
-rate_limit_rate: 10.0     # Requests per second (per IP)
-rate_limit_burst: 20      # Maximum burst size
+rate_limit_rate: 10.0
+rate_limit_burst: 20
 ```
 
-#### 2. Environment Variables
+Environment variables:
+
 ```bash
 export RATE_LIMIT_ENABLED=true
 export RATE_LIMIT_RATE=10.0
 export RATE_LIMIT_BURST=20
 ```
 
-### Default Values
+### Behavior
 
-- **Development** (`config.example.yaml`):
-  - Rate: 10 req/s per IP
-  - Burst: 20 requests
-  
-- **Production** (`config.production.yaml`):
-  - Rate: 5 req/s per IP
-  - Burst: 10 requests
+When exceeded:
 
-### How It Works
+- HTTP status: `429 Too Many Requests`
+- Error payload uses Redfish-style extended info
 
-```
-1. Client makes request → 2. Extract IP address → 3. Check rate limit
-                                                         ↓
-                                     ← 429 Too Many Requests ← Rate exceeded?
-                                                         ↓
-                                     → Continue to handler ← Within limit
-```
+### Monitoring and Tuning
 
-### Response on Rate Limit Exceeded
-
-**HTTP Status**: `429 Too Many Requests`
-
-**Response Body**:
-```json
-{
-  "error": {
-    "@Message.ExtendedInfo": [
-      {
-        "MessageId": "Base.1.0.RateLimitExceeded",
-        "Message": "Rate limit exceeded. Please try again later.",
-        "Severity": "Warning"
-      }
-    ]
-  }
-}
-```
-
-### Testing
-
-Comprehensive tests are provided in `middleware/ratelimit_test.go`:
-
-- ✅ Burst requests handling
-- ✅ Rate limit enforcement
-- ✅ Per-IP isolation
-- ✅ Recovery after waiting
-- ✅ Cleanup mechanism
-
-### Monitoring
-
-Rate limit violations are logged:
-
-```
-WARN Rate limit exceeded ip=192.168.1.100 path=/MultiFish/v1/Platform
-```
-
-### Tuning Guidelines
-
-| Use Case | Rate (req/s) | Burst | Notes |
-|----------|-------------|-------|-------|
-| **Development** | 10-100 | 20-50 | Relaxed for testing |
-| **Production (Internal)** | 10-20 | 20-30 | Moderate protection |
-| **Production (Public)** | 1-5 | 5-10 | Strict protection |
-| **High Traffic** | 50-100 | 100-200 | With caching |
-
-### Advanced Configuration
-
-To disable rate limiting (NOT recommended for production):
-
-```yaml
-rate_limit_enabled: false
-```
-
-Or via environment:
-```bash
-export RATE_LIMIT_ENABLED=false
-```
-
-### Memory Management
-
-The rate limiter automatically cleans up stale entries when the number of tracked IPs exceeds 10,000. This prevents memory leaks in long-running deployments.
+- Monitor warning logs for repeated 429 events
+- Tune by traffic profile (internal/public/high-traffic)
+- Keep cleanup behavior enabled to avoid stale-IP memory growth
 
 ---
 
-## 4. Additional Security Recommendations
+## 4) Operational Checklist
 
-### Implemented ✅
-- [x] **Authentication & Authorization** - Basic and Token auth modes
-- [x] Password masking in all API responses
-- [x] Rate limiting per IP address
-- [x] Configurable security settings
-- [x] Comprehensive test coverage
+Before production rollout:
 
-### Future Enhancements 🚧
+- [ ] `auth.enabled: true`
+- [ ] `auth.mode: token`
+- [ ] secure tokens from environment/secret manager
+- [ ] `rate_limit_enabled: true`
+- [ ] HTTPS via reverse proxy
+- [ ] verify masked passwords in platform APIs
+- [ ] monitor auth failures and 429 spikes
 
-Consider implementing these additional security measures:
-
-1. **Advanced Authentication**
-   - JWT token authentication with expiration
-   - OAuth 2.0 integration
-   - Role-based access control (RBAC)
-   - Per-endpoint permissions
-
-2. **Transport Security**
-   - Enforce HTTPS only
-   - TLS certificate validation
-   - HSTS headers
-
-3. **Input Validation**
-   - Stricter payload validation
-   - SQL injection prevention
-   - XSS protection
-
-4. **Audit Logging**
-   - Log all authentication attempts
-   - Track configuration changes
-   - Monitor suspicious activity
-
-5. **Advanced Rate Limiting**
-   - Different limits for different endpoints
-   - Whitelist trusted IPs
-   - Adaptive rate limiting based on behavior
-
-6. **Secrets Management**
-   - Use environment variables for sensitive data
-   - Integrate with vault systems (HashiCorp Vault, AWS Secrets Manager)
-   - Rotate credentials regularly
-
-### Why Certificate Authentication is NOT Supported
-
-**Certificate authentication (mTLS) requires:**
-- Certificate Authority (CA) infrastructure
-- Certificate issuance and revocation system
-- Certificate validation service
-- Regular certificate renewal process
-
-**MultiFish is designed as:**
-- Lightweight API service
-- Simple deployment model
-- No external dependencies for authentication
-
-**Alternative for certificate-based security:**
-Use a reverse proxy with mTLS support (nginx, Envoy) that validates certificates and forwards authenticated requests to MultiFish.
-
----
-
-## 5. Security Testing
-
-### Running Security Tests
+Recommended baseline:
 
 ```bash
-# Test authentication middleware
-go test ./middleware -run TestAuthMiddleware -v
-
-# Test password masking
-go test ./utility -run TestMaskPassword -v
-
-# Test rate limiting
-go test ./middleware -run TestRateLimiter -v
-
-# Run all security-related tests
-go test ./... -v | grep -E "(security|rate|mask|auth)"
-```
-
-### Manual Testing
-
-#### Test Authentication
-```bash
-# Test without authentication (should fail if auth is enabled)
-curl http://localhost:8080/MultiFish/v1
-
-# Test with token authentication
-curl -H "Authorization: Bearer your-token" \
-     http://localhost:8080/MultiFish/v1
-
-# Test with basic authentication
-curl -u admin:password \
-     http://localhost:8080/MultiFish/v1
-```
-
-#### Test Password Masking
-```bash
-# List machines - verify passwords are masked
-curl http://localhost:8080/MultiFish/v1/Platform
-
-# Get machine details - verify password in Connection is masked
-curl http://localhost:8080/MultiFish/v1/Platform/machine1
-```
-
-#### Test Rate Limiting
-```bash
-# Send rapid requests to trigger rate limit
-for i in {1..25}; do
-  curl -w "\n%{http_code}\n" http://localhost:8080/MultiFish/v1/Platform
-done
-
-# Should see some 429 responses after burst limit
-```
-
----
-
-## 6. Deployment Considerations
-
-### Production Checklist
-
-- [ ] **Enable authentication** (`auth.enabled: true`)
-- [ ] **Choose auth mode** (token recommended for production)
-- [ ] **Set secure credentials** via environment variables
-- [ ] Set `rate_limit_enabled: true` in production config
-- [ ] Configure appropriate rate limits for your use case
-- [ ] **Use HTTPS** (configure reverse proxy)
-- [ ] Monitor rate limit violations in logs
-- [ ] Monitor authentication failures in logs
-- [ ] Verify password masking on all endpoints
-- [ ] Set up alerts for excessive 429 responses
-- [ ] Document rate limits and auth requirements in API docs
-- [ ] Consider CDN/reverse proxy for additional protection
-
-### Environment Variables
-
-```bash
-# Recommended production settings
 export AUTH_ENABLED=true
 export AUTH_MODE=token
 export TOKEN_AUTH_TOKENS="$(openssl rand -hex 32)"
@@ -411,61 +277,35 @@ export LOG_LEVEL=info
 
 ---
 
-## 7. Troubleshooting
+## 5) Security Testing
 
-### Authentication Issues
+```bash
+# Authentication
+go test ./middleware -run TestAuthMiddleware -v
 
-**Problem**: Getting 401 Unauthorized errors
+# Password masking
+go test ./utility -run TestMaskPassword -v
 
-**Solutions**:
-- Verify authentication is enabled in config
-- Check credentials format (Bearer token or Basic auth)
-- Review logs for authentication attempts
-- Test with curl verbose mode: `curl -v ...`
+# Rate limiting
+go test ./middleware -run TestRateLimiter -v
+```
 
-**Problem**: Authentication not enforced
+Manual checks:
 
-**Check**:
-- Verify `auth.enabled: true` in config
-- Confirm `auth.mode` is not "none"
-- Check middleware is registered in `main.go`
-- Look for "Authentication enabled" in logs
+```bash
+# Without token (expect 401 when auth enabled)
+curl -i http://localhost:8080/MultiFish/v1
 
-### Rate Limiting Issues
-
-**Problem**: Legitimate users getting rate limited
-
-**Solutions**:
-- Increase `rate_limit_rate` or `rate_limit_burst`
-- Implement IP whitelisting for trusted sources
-- Use a reverse proxy to aggregate requests
-
-**Problem**: Rate limiting not working
-
-**Check**:
-- Verify `rate_limit_enabled: true` in config
-- Check logs for rate limiter initialization
-- Confirm middleware is registered in `main.go`
-
-### Password Masking Issues
-
-**Problem**: Passwords visible in responses
-
-**Solutions**:
-- Verify `utility.MaskPassword()` is called
-- Check for direct struct serialization bypassing masking
-- Review custom response builders
+# With token (expect 200)
+curl -i -H "Authorization: Bearer your-token" http://localhost:8080/MultiFish/v1
+```
 
 ---
 
-## 8. References
+## References
 
-- [Authentication Guide](docs/AUTHENTICATION.md) - Comprehensive authentication documentation
+- [Main README](README.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [Config Guide](config/README.md)
 - [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
 - [Token Bucket Algorithm](https://en.wikipedia.org/wiki/Token_bucket)
-- [Redfish Specification](https://www.dmtf.org/standards/redfish)
-
----
-
-**Last Updated**: 2026-02-10  
-**Version**: 2.0.0

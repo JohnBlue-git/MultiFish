@@ -16,5 +16,5 @@ data:
     rate_limit_rate: 100.0
     rate_limit_burst: 200
     auth:
-      enabled: true
-      mode: token
+      enabled: false
+      mode: none

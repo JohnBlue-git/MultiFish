@@ -252,7 +252,6 @@ Docker provides an easy way to containerize and deploy MultiFish with all its de
 ### Prerequisites
 
 - Docker 20.10+ installed
-- Docker Compose 1.29+ (for multi-container setup)
 - Basic understanding of Docker concepts
 
 ### Quick Start with Docker
@@ -401,353 +400,6 @@ docker exec -it multifish /bin/sh
 
 # Inspect container
 docker inspect multifish
-```
-
-### Docker Compose Deployment
-
-Docker Compose simplifies multi-container deployments and configuration management.
-
-#### 1. Basic Docker Compose
-
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  multifish:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: multifish:latest
-    container_name: multifish
-    restart: unless-stopped
-    
-    # Environment variables (highest priority)
-    environment:
-      - PORT=8080
-      - LOG_LEVEL=info
-      - WORKER_POOL_SIZE=100
-      - LOGS_DIR=/app/logs
-    
-    # Port mapping
-    ports:
-      - "8080:8080"
-    
-    # Volumes
-    volumes:
-      - ./logs:/app/logs
-      - ./config.yaml:/app/config.yaml:ro
-    
-    # Command (with config file)
-    command: ./multifish -config /app/config.yaml
-    
-    # Health check
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/MultiFish/v1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-```
-
-#### 2. Production Docker Compose
-
-Create `docker-compose.prod.yml` with advanced features:
-
-```yaml
-version: '3.8'
-
-services:
-  multifish:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - GO_VERSION=1.22
-    image: multifish:production
-    container_name: multifish-prod
-    restart: always
-    
-    # Use .env file for secrets
-    env_file:
-      - .env.production
-    
-    environment:
-      - PORT=8080
-      - LOG_LEVEL=info
-      - WORKER_POOL_SIZE=200
-      - LOGS_DIR=/var/log/multifish
-      - AUTH_ENABLED=true
-      - AUTH_MODE=token
-      - RATE_LIMIT_ENABLED=true
-      - RATE_LIMIT_RATE=100.0
-      - RATE_LIMIT_BURST=200
-    
-    ports:
-      - "8080:8080"
-    
-    volumes:
-      # Logs directory
-      - multifish-logs:/var/log/multifish
-      # Configuration (read-only)
-      - ./config.production.yaml:/app/config.yaml:ro
-    
-    command: ./multifish -config /app/config.yaml
-    
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
-    
-    # Health check
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/MultiFish/v1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    
-    # Logging configuration
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
-    
-    # Network
-    networks:
-      - multifish-network
-
-# Named volumes
-volumes:
-  multifish-logs:
-    driver: local
-
-# Networks
-networks:
-  multifish-network:
-    driver: bridge
-```
-
-#### 3. Docker Compose with Reverse Proxy
-
-Create `docker-compose.nginx.yml` with nginx:
-
-```yaml
-version: '3.8'
-
-services:
-  multifish:
-    build: .
-    image: multifish:latest
-    container_name: multifish
-    restart: unless-stopped
-    
-    environment:
-      - PORT=8080
-      - LOG_LEVEL=info
-      - WORKER_POOL_SIZE=100
-      - AUTH_ENABLED=true
-      - AUTH_MODE=token
-    
-    # Don't expose port directly
-    expose:
-      - "8080"
-    
-    volumes:
-      - multifish-logs:/app/logs
-      - ./config.yaml:/app/config.yaml:ro
-    
-    command: ./multifish -config /app/config.yaml
-    
-    networks:
-      - multifish-network
-  
-  nginx:
-    image: nginx:alpine
-    container_name: multifish-nginx
-    restart: unless-stopped
-    
-    ports:
-      - "80:80"
-      - "443:443"
-    
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    
-    depends_on:
-      - multifish
-    
-    networks:
-      - multifish-network
-
-volumes:
-  multifish-logs:
-
-networks:
-  multifish-network:
-    driver: bridge
-```
-
-Create `nginx.conf`:
-
-```nginx
-events {
-    worker_connections 1024;
-}
-
-http {
-    upstream multifish {
-        server multifish:8080;
-    }
-
-    server {
-        listen 80;
-        server_name multifish.example.com;
-        
-        # Redirect to HTTPS
-        return 301 https://$host$request_uri;
-    }
-
-    server {
-        listen 443 ssl http2;
-        server_name multifish.example.com;
-        
-        # SSL configuration
-        ssl_certificate /etc/nginx/ssl/cert.pem;
-        ssl_certificate_key /etc/nginx/ssl/key.pem;
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_ciphers HIGH:!aNULL:!MD5;
-        
-        # Proxy settings
-        location / {
-            proxy_pass http://multifish;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            
-            # Timeouts
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
-        }
-        
-        # Health check endpoint
-        location /health {
-            access_log off;
-            proxy_pass http://multifish/MultiFish/v1;
-        }
-    }
-}
-```
-
-#### 4. Docker Compose Commands
-
-```bash
-# Start services
-docker-compose up -d
-
-# Start with specific file
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f multifish
-
-# Stop services
-docker-compose down
-
-# Stop and remove volumes
-docker-compose down -v
-
-# Restart services
-docker-compose restart
-
-# Rebuild and restart
-docker-compose up -d --build
-
-# Scale services (if designed for it)
-docker-compose up -d --scale multifish=3
-
-# Check service status
-docker-compose ps
-
-# Execute command in service
-docker-compose exec multifish /bin/sh
-```
-
-### Docker Best Practices
-
-#### 1. Multi-stage Builds
-Use multi-stage builds to minimize image size:
-- Build stage: Full Go toolchain
-- Runtime stage: Minimal Alpine Linux
-- Result: Smaller, more secure images
-
-#### 2. Configuration Management
-```bash
-# Use .env file for secrets
-cat > .env.production << EOF
-AUTH_ENABLED=true
-AUTH_MODE=token
-TOKEN_AUTH_TOKENS=your-secret-token-here
-EOF
-
-# Set proper permissions
-chmod 600 .env.production
-
-# Reference in docker-compose.yml
-env_file:
-  - .env.production
-```
-
-#### 3. Volume Management
-```bash
-# Named volumes for persistence
-volumes:
-  multifish-logs:
-    driver: local
-
-# Bind mounts for configuration
-volumes:
-  - ./config.yaml:/app/config.yaml:ro  # Read-only
-
-# Inspect volumes
-docker volume ls
-docker volume inspect multifish-logs
-```
-
-#### 4. Resource Limits
-```yaml
-deploy:
-  resources:
-    limits:
-      cpus: '2.0'
-      memory: 2G
-    reservations:
-      cpus: '1.0'
-      memory: 1G
-```
-
-#### 5. Health Checks
-```yaml
-healthcheck:
-  test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/MultiFish/v1"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
 ```
 
 ### Docker Troubleshooting
@@ -1069,6 +721,23 @@ Update deployment to use PVC:
 ### Kubernetes Deployment Commands
 
 ```bash
+# If you don't have a cluster running or configured locally (like minikube, kind, or a remote kubeconfig), then do the following processes first.
+# Option 1: Start a Local Cluster with minikube
+# If you're working locally (e.g., in Codespaces or a dev environment):
+# 1. **Install Minikube** if you haven’t:
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+# 2. **Start a cluster**:
+minikube start
+minikube stop --all
+# Option 2: Use a Cloud Cluster (e.g., GKE, EKS, AKS)**
+# If you're deploying to a cloud provider, make sure:
+# * You have the correct `kubeconfig` set up (`~/.kube/config`)
+# * You're authenticated (e.g., via `gcloud`, `aws`, or `az`)
+# * Then try:
+kubectl config use-context <your-cluster-context>
+kubectl apply -f ./k8s
+
 # Create namespace (optional)
 kubectl create namespace multifish
 
@@ -1114,6 +783,52 @@ kubectl rollout status deployment/multifish
 # Delete resources
 kubectl delete -f k8s/
 ```
+
+### Enable Authentication (Token Mode) via Commands
+
+Use this flow when your current Kubernetes deployment is running with auth disabled and you want to turn on token auth from CLI.
+
+1. Generate secure tokens:
+```bash
+TOKEN1=$(openssl rand -hex 32)
+TOKEN2=$(openssl rand -hex 32)
+echo "Generated tokens:" && echo "$TOKEN1" && echo "$TOKEN2"
+```
+
+2. Create or update Secret (idempotent):
+```bash
+kubectl -n default create secret generic multifish-secret \
+  --from-literal=auth-tokens="$TOKEN1,$TOKEN2" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+3. Enable token auth on Deployment:
+```bash
+kubectl -n default set env deployment/multifish \
+  AUTH_ENABLED=true \
+  AUTH_MODE=token \
+  TOKEN_AUTH_TOKENS="$TOKEN1,$TOKEN2"
+```
+
+4. Verify rollout and test:
+```bash
+kubectl -n default rollout status deployment/multifish
+kubectl -n default get pods -l app=multifish
+
+# Port-forward for local test
+kubectl -n default port-forward service/multifish-service 8080:8080
+
+# Without token (should be rejected)
+curl -i http://127.0.0.1:8080/MultiFish/v1
+
+# With token (should succeed)
+curl -i -H "Authorization: Bearer $TOKEN1" http://127.0.0.1:8080/MultiFish/v1
+```
+
+Important:
+- `kubectl create secret generic ... --from-literal=auth-tokens=...` is correct.
+- Secret creation alone does not enable auth.
+- Auth is active only when Deployment runtime config has `AUTH_ENABLED=true` and `AUTH_MODE=token`.
 
 ### Kubernetes Best Practices
 
@@ -1373,17 +1088,3 @@ ExecStart=/home/yujen/MultiFish/multifish -config /home/yujen/MultiFish/config.p
 ```bash
 sudo systemctl restart multifish
 ```
-
-## Additional Resources
-
-- [Configuration Documentation](../config/README.md)
-- [Security Guide](SECURITY.md)
-- [Authentication Guide](AUTHENTICATION.md)
-- [API Documentation](../README.md#api-endpoints)
-- [Job Scheduling](../scheduler/README.md)
-
-## Support
-
-For issues and questions:
-- GitHub Issues: https://github.com/JohnBlue-git/MultiFish/issues
-- Documentation: See README.md and module-specific docs

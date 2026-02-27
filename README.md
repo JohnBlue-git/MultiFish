@@ -1,6 +1,6 @@
 # MultiFish - Multi-BMC Redfish Management API
 
-[![Go Version](https://img.shields.io/badge/Go-1.22+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.24+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 **MultiFish** is a powerful REST API service for managing multiple Baseboard Management Controllers (BMCs) through the Redfish protocol. It provides centralized management, automated job scheduling, and support for both standard Redfish and vendor-specific extensions (OpenBMC).
@@ -93,8 +93,7 @@ MultiFish/
 │
 ├── README.md                        # Main project documentation
 ├── DEPLOYMENT.md                    # Comprehensive deployment guide
-├── AUTHENTICATION.md                # Authentication setup guide
-├── SECURITY.md                      # Security features and best practices
+├── SECURITY.md                      # Security and authentication guide
 │
 ├── config.example.yaml              # Example development config
 ├── config.production.yaml           # Example production config
@@ -106,8 +105,6 @@ MultiFish/
 │
 ├── Dockerfile                       # Multi-stage Docker build
 ├── .dockerignore                    # Docker build optimization
-├── docker-compose.yml               # Development Docker Compose
-├── docker-compose.prod.yml          # Production Docker Compose
 │
 ├── handler/                         # HTTP request handlers
 │
@@ -256,7 +253,7 @@ Comprehensive test infrastructure.
 
 ### Prerequisites
 
-- Go 1.22 or higher
+- Go 1.24 or higher
 - Access to one or more BMCs with Redfish support
 - `jq` for pretty-printing JSON (optional)
 - `curl` for API testing
@@ -326,7 +323,7 @@ MultiFish supports multiple deployment methods for different use cases:
 | **Local Binary** | Development | `./multifish` |
 | **Management Script** | Development/Testing | `./multifish.sh start` |
 | **Systemd Service** | Production (Single Server) | `sudo systemctl start multifish` |
-| **Docker** | Containerized (Single Server) | `docker-compose up -d` |
+| **Docker** | Containerized (Single Server) | `docker run -d --name multifish -p 8080:8080 multifish:latest` |
 | **Kubernetes** | Production (Multi-Server) | `kubectl apply -f k8s/` |
 
 ### Quick Examples
@@ -342,16 +339,28 @@ sudo systemctl start multifish
 sudo journalctl -u multifish -f
 ```
 
-**Docker Compose:**
+**Docker:**
 ```bash
-docker-compose up -d
-docker-compose logs -f
+docker build -t multifish:latest .
+docker run -d --name multifish -p 8080:8080 multifish:latest
+docker logs -f multifish
 ```
 
 **Kubernetes:**
 ```bash
 kubectl apply -f k8s/
 kubectl get pods -l app=multifish
+```
+
+**Kubernetes（啟用 Token Auth，可選）:**
+```bash
+TOKEN1=$(openssl rand -hex 32)
+TOKEN2=$(openssl rand -hex 32)
+kubectl -n default create secret generic multifish-secret \
+  --from-literal=auth-tokens="$TOKEN1,$TOKEN2" \
+  --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n default set env deployment/multifish \
+  AUTH_ENABLED=true AUTH_MODE=token TOKEN_AUTH_TOKENS="$TOKEN1,$TOKEN2"
 ```
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive guides.
@@ -467,8 +476,7 @@ rate_limit_burst: 20     # Burst capacity
 
 **📚 Detailed Documentation:**
 
-- **[Authentication Guide](AUTHENTICATION.md)** - Complete authentication setup and examples
-- **[SECURITY.md](SECURITY.md)** - Security features overview
+- **[Security Guide](SECURITY.md)** - Authentication setup, rate limiting, password masking, and best practices
 
 > **Note:** Certificate-based authentication (mTLS) is not supported as we don't have a PKI infrastructure to verify client certificates. Use token authentication with a reverse proxy for certificate validation if needed.
 
@@ -1007,12 +1015,11 @@ For production deployments using containers and orchestration:
 
 📚 **[Complete Deployment Guide](DEPLOYMENT.md)** includes:
 - **[Docker Deployment](DEPLOYMENT.md#docker-deployment)** - Dockerfile, multi-stage builds, container management
-- **[Docker Compose](DEPLOYMENT.md#docker-compose-deployment)** - Development and production compose files
-- **[Kubernetes](DEPLOYMENT.md#kubernetes-deployment)** - Complete K8s manifests, ConfigMaps, Secrets
+- **[Kubernetes](DEPLOYMENT.md#kubernetes-deployment)** - Complete K8s manifests, ConfigMaps, Secrets, and auth enable flow
 - **[Systemd Service](DEPLOYMENT.md#systemd-service-setup)** - Native Linux service configuration
 - **[Management Script](DEPLOYMENT.md#running-multifish)** - Using multifish.sh for service control
 
-💡 **** - Fast commands for all deployment methods
+💡 **Tip:** Kubernetes manifests currently default to `AUTH_ENABLED=false` / `AUTH_MODE=none`; enable token auth via the command flow in `DEPLOYMENT.md` when needed.
 
 **Note:** Only `WorkerPoolSize` can be updated at runtime. Other settings require restart.
 
@@ -1288,8 +1295,7 @@ Comprehensive documentation for each module:
 - **[Tests](tests/README.md)** - Testing infrastructure and guidelines
 
 ### Integration Guides
-- **[Authentication](AUTHENTICATION.md)** - Complete authentication setup and examples
-- **[Security](SECURITY.md)** - Security features and best practices
+- **[Security](SECURITY.md)** - Authentication setup, security features, and operational best practices
 
 ## 🔍 Troubleshooting
 
@@ -1301,7 +1307,7 @@ Comprehensive documentation for each module:
 lsof -i :8080
 
 # Check Go version
-go version  # Should be 1.22+
+go version  # Should be 1.24+
 
 # Verify dependencies
 go mod download
@@ -1440,7 +1446,6 @@ For issues, questions, or contributions:
 - [Kubernetes Deployment](DEPLOYMENT.md#kubernetes-deployment) - K8s orchestration
 
 ### Guides & Examples
-- [Authentication Guide](AUTHENTICATION.md) - Auth setup
 - [Security Guide](SECURITY.md) - Security features
 - [Examples Script](examples.sh) - Interactive CLI examples
 - [Postman Collection](MultiFish.postman_collection.json) - GUI testing

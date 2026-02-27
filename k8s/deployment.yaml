@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: multifish
-        image: multifish:latest
+        image: johnbluedocker/multifish:latest
         imagePullPolicy: Always
         
         ports:
@@ -43,20 +43,15 @@ spec:
         - name: SHUTDOWN_TIMEOUT
           value: "60"
         - name: AUTH_ENABLED
-          value: "true"
+          value: "false"
         - name: AUTH_MODE
-          value: "token"
+          value: "none"
         - name: RATE_LIMIT_ENABLED
           value: "true"
         - name: RATE_LIMIT_RATE
           value: "100.0"
         - name: RATE_LIMIT_BURST
           value: "200"
-        - name: TOKEN_AUTH_TOKENS
-          valueFrom:
-            secretKeyRef:
-              name: multifish-secret
-              key: auth-tokens
         
         # Volume mounts
         volumeMounts:

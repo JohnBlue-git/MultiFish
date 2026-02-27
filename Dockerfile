@@ -2,7 +2,8 @@
 # Multi-stage build for optimized production image
 
 # Build stage
-FROM golang:1.22-alpine AS builder
+ARG GO_VERSION=1.24
+FROM golang:${GO_VERSION}-alpine AS builder
 
 # Set working directory
 WORKDIR /build
