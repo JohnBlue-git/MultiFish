@@ -256,7 +256,7 @@ func (j *JobCreateRequest) validateNoDuplicateMachines() error {
 // validateAction validates the action type
 func (j *JobCreateRequest) validateAction() error {
 	switch j.Action {
-	case ActionPatchProfile:
+	case ActionPatchProfile, ActionPatchManager, ActionPatchFanController, ActionPatchFanZone, ActionPatchPidController:
 		return nil
 	default:
 		return fmt.Errorf("job validation failed: unsupported action type '%s'. Valid actions are: %v", j.Action, []string{"PatchProfile", "PatchManager", "PatchFanController", "PatchFanZone", "PatchPidController"})

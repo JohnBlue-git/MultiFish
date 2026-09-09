@@ -334,8 +334,7 @@ Executes jobs and manages their lifecycle.
 
 ```go
 type JobExecutor interface {
-    ExecuteJob(job *Job) error
-    ValidateJob(job *Job) error
+    ExecuteJob(job *Job) *ExecutionHistory
 }
 ```
 
@@ -401,20 +400,21 @@ type JobService struct {
 - Limits concurrent BMC connections
 
 **Worker Pool Behavior:**
-- Default size: 5 workers
+- Default size: 99 workers
 - Configurable via PATCH /JobService
 - Blocks when pool exhausted
 - Releases worker after job completion
 
 #### Job Ticker
 
-Checks for due jobs every minute.
+Checks for due jobs every second, with drift correction (a tick more than 100ms off-schedule, or a job firing more than 2s late, is logged).
 
 ```go
-func (js *JobService) Start() {
-    ticker := time.NewTicker(1 * time.Minute)
+func (js *JobService) startScheduler() {
+    tickInterval := 1 * time.Second
+    js.ticker = time.NewTicker(tickInterval)
     go func() {
-        for range ticker.C {
+        for range js.ticker.C {
             js.checkAndExecuteJobs()
         }
     }()
@@ -423,7 +423,7 @@ func (js *JobService) Start() {
 
 **Schedule Check Logic:**
 ```
-Every minute:
+Every second:
   For each job:
     If job.NextRunTime <= now:
       If worker available:
@@ -742,8 +742,8 @@ func TestJobExecution(t *testing.T) {
         // ... test job configuration
     }
     
-    err := executor.ExecuteJob(job)
-    assert.NoError(t, err)
+    history := executor.ExecuteJob(job)
+    assert.NotNil(t, history)
     assert.Equal(t, JobStatusCompleted, job.Status)
     assert.NotNil(t, job.LastRunTime)
 }

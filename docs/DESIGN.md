@@ -99,12 +99,10 @@ A scheduled job must not block the HTTP server. Long-running work belongs in the
 │   ├── config.production.yaml
 │   ├── .env.production.example
 │   └── README.md
-├── handler/                        # HTTP API handlers and feature documentation
+├── handler/                        # HTTP API handlers
 │   ├── handlePlatform.go
 │   ├── handleManager.go
-│   ├── handleJobService.go
-│   ├── PLATFORM.md
-│   └── JOBSERVICE.md
+│   └── handleJobService.go
 ├── middleware/                     # Authentication and rate limiting
 ├── providers/                      # Provider registry and implementations
 │   ├── generic_registry.go
@@ -120,10 +118,15 @@ A scheduled job must not block the HTTP server. Long-running work belongs in the
 ├── k8s/                            # Kubernetes manifests
 ├── tests/                          # Test helpers and test execution scripts
 ├── README.md                       # User-facing usage guide
-└── docs/                           # Design, deployment, and security guides
+└── docs/                           # Design, deployment, security, and module guides
         ├── DEPLOYMENT.md
         ├── SECURITY.md
-        └── DESIGN.md
+        ├── DESIGN.md
+        ├── PLATFORM.md
+        ├── JOBSERVICE.md
+        ├── PROVIDER.md
+        ├── SCEDULER.md
+        └── TESTS.md
 ```
 
 ## Module Responsibilities
@@ -134,7 +137,7 @@ Loads configuration, initializes logging and middleware, registers API routes, a
 
 ### `handler/`
 
-Owns HTTP concerns: route parameters, request decoding, validation orchestration, response formatting, and API error handling. Platform and JobService behavior is documented in [handler/PLATFORM.md](../handler/PLATFORM.md) and [handler/JOBSERVICE.md](../handler/JOBSERVICE.md).
+Owns HTTP concerns: route parameters, request decoding, validation orchestration, response formatting, and API error handling. Platform and JobService behavior is documented in [PLATFORM.md](PLATFORM.md) and [JOBSERVICE.md](JOBSERVICE.md).
 
 ### `providers/`
 
@@ -155,7 +158,7 @@ Applies cross-cutting request policy before handlers run. Authentication and rat
 
 ### `config/`
 
-Resolves configuration in priority order: command-line flags, environment variables, YAML configuration, then built-in defaults. Validation belongs in the config package so all startup paths enforce the same rules.
+Resolves configuration in priority order: environment variables, then YAML configuration (selected via the `-config <path>` flag), then built-in defaults. Validation belongs in the config package so all startup paths enforce the same rules.
 
 ### `utility/`
 
@@ -210,4 +213,4 @@ Run the complete suite with:
 go test ./...
 ```
 
-See [tests/README.md](../tests/README.md) for focused test commands and coverage helpers. Provider and scheduler details are documented in [providers/PROVIDER.md](../providers/PROVIDER.md) and [scheduler/SCEDULER.md](../scheduler/SCEDULER.md).
+See [TESTS.md](TESTS.md) for focused test commands and coverage helpers. Provider and scheduler details are documented in [PROVIDER.md](PROVIDER.md) and [SCEDULER.md](SCEDULER.md).

@@ -65,7 +65,7 @@ curl http://localhost:8080/MultiFish/v1
 
 ## Configuration
 
-MultiFish can load settings from command-line flags, environment variables, a YAML file, or built-in defaults. Command-line and environment settings take precedence over file values.
+MultiFish loads settings from built-in defaults, optionally overlaid by a YAML file, then overlaid by environment variables — in that order, so environment variables win over the YAML file, which wins over defaults. The only command-line flag is `-config <path>`, which selects which YAML file to load; it does not set individual fields.
 
 ### Configuration files
 
@@ -78,13 +78,6 @@ Use a YAML file explicitly:
 
 ```bash
 ./multifish -config config/config.production.yaml
-```
-
-Or set the configuration path through the environment:
-
-```bash
-export MULTIFISH_CONFIG=/etc/multifish/config.yaml
-./multifish
 ```
 
 Common environment variables include `PORT`, `LOG_LEVEL`, `WORKER_POOL_SIZE`, `TOKEN_AUTH_TOKENS`, and `AUTH_MODE`. See [SECURITY.md](docs/SECURITY.md) for authentication settings.
@@ -179,7 +172,7 @@ curl http://localhost:8080/MultiFish/v1/Platform/server1/Managers
 curl http://localhost:8080/MultiFish/v1/Platform/server1/Managers/bmc
 ```
 
-Available platform, manager, fan, profile, and PID operations are documented in [handler/PLATFORM.md](handler/PLATFORM.md).
+Available platform, manager, fan, profile, and PID operations are documented in [docs/PLATFORM.md](docs/PLATFORM.md).
 
 ### Job service
 
@@ -193,7 +186,7 @@ curl -X POST http://localhost:8080/MultiFish/v1/JobService/Jobs \
   -d @payloads/continuous_daily.json
 ```
 
-Job lifecycle, schedules, actions, and response formats are documented in [handler/JOBSERVICE.md](handler/JOBSERVICE.md).
+Job lifecycle, schedules, actions, and response formats are documented in [docs/JOBSERVICE.md](docs/JOBSERVICE.md).
 
 ## API Examples
 
@@ -343,7 +336,7 @@ Run all tests:
 go test ./...
 ```
 
-Focused test and coverage helpers are documented in [tests/README.md](tests/README.md).
+Focused test and coverage helpers are documented in [docs/TESTS.md](docs/TESTS.md).
 
 ## Documentation
 
@@ -351,24 +344,24 @@ Focused test and coverage helpers are documented in [tests/README.md](tests/READ
 - [Deployment guide](docs/DEPLOYMENT.md)
 - [Security guide](docs/SECURITY.md)
 - [Configuration reference](config/README.md)
-- [Platform API guide](handler/PLATFORM.md)
-- [Job Service guide](handler/JOBSERVICE.md)
-- [Provider guide](providers/PROVIDER.md)
-- [Scheduler guide](scheduler/SCEDULER.md)
-- [Test guide](tests/README.md)
+- [Platform API guide](docs/PLATFORM.md)
+- [Job Service guide](docs/JOBSERVICE.md)
+- [Provider guide](docs/PROVIDER.md)
+- [Scheduler guide](docs/SCEDULER.md)
+- [Test guide](docs/TESTS.md)
 
 ### Feature Documentation
 
-- [Platform Management](handler/PLATFORM.md): platform registration, managers, and provider operations
-- [Job Service](handler/JOBSERVICE.md): schedules, actions, worker pools, and execution logs
+- [Platform Management](docs/PLATFORM.md): platform registration, managers, and provider operations
+- [Job Service](docs/JOBSERVICE.md): schedules, actions, worker pools, and execution logs
 
 ### Internal Module Documentation
 
 - [Config module](config/README.md): configuration sources and validation
-- [Providers module](providers/PROVIDER.md): provider architecture and BMC support
-- [Scheduler module](scheduler/SCEDULER.md): job scheduling internals
+- [Providers module](docs/PROVIDER.md): provider architecture and BMC support
+- [Scheduler module](docs/SCEDULER.md): job scheduling internals
 - [Utility module](utility/README.md): shared helpers, logging, and errors
-- [Testing guide](tests/README.md): test commands and coverage helpers
+- [Testing guide](docs/TESTS.md): test commands and coverage helpers
 
 ## Contributing
 
@@ -378,7 +371,7 @@ Focused test and coverage helpers are documented in [tests/README.md](tests/READ
 4. Run `go test ./...` before submitting changes.
 5. Keep commits focused and describe the behavior they change.
 
-Provider additions should follow the extension model described in [DESIGN.md](docs/DESIGN.md#provider-extension-model) and the guidance in [providers/PROVIDER.md](providers/PROVIDER.md).
+Provider additions should follow the extension model described in [DESIGN.md](docs/DESIGN.md#provider-extension-model) and the guidance in [docs/PROVIDER.md](docs/PROVIDER.md).
 
 ## Acknowledgements
 

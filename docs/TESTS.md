@@ -598,11 +598,11 @@ ls -la tests/reports/
 
 - Test files must end with `_test.go`
 
-- [Scheduler documentation](../scheduler/SCEDULER.md) - Scheduler implementation details- Should be in the same package as the code being tested
+- [Scheduler documentation](../docs/SCEDULER.md) - Scheduler implementation details- Should be in the same package as the code being tested
 
 - [Utility README](../utility/README.md) - Testing utilities and helpers- Example: `job_service.go` → `job_service_test.go`
 
-- [Providers documentation](../providers/PROVIDER.md) - Provider testing strategies
+- [Providers documentation](../docs/PROVIDER.md) - Provider testing strategies
 
 - [Root README](../README.md) - Project overview### Test Function Naming
 

@@ -4,13 +4,7 @@
 
 The `providers/` package implements a flexible, extensible **Generic Provider Pattern** for managing different types of BMC/Redfish implementations. It uses Go generics to provide type-safe, reusable provider registries that support both standard Redfish (Base) and extended OEM implementations (Extend).
 
-> **📚 For comprehensive documentation on the Generic Provider Pattern, see [PROVIDER_PATTERN.md](./PROVIDER_PATTERN.md)**
-
-## Quick Links
-
-- **[Provider Pattern Guide](./PROVIDER_PATTERN.md)** - Complete guide to the generic provider pattern
-- **[Adding New Registry Types](./PROVIDER_PATTERN.md#adding-a-new-registry-type)** - Step-by-step guide
-- **[Vendor-Specific Providers](./PROVIDER_PATTERN.md#example-adding-vendor-specific-provider)** - Examples for Dell, HP, etc.
+> See [Adding a New Provider](#adding-a-new-provider) and [Quick Start: Adding New Registry Types](#quick-start-adding-new-registry-types) below for extension guides.
 
 ## Why Provider Pattern?
 
@@ -26,11 +20,9 @@ The provider pattern solves several key challenges:
 
 ```
 providers/
-├── generic_registry.go        # Generic registry implementation (NEW!)
+├── generic_registry.go        # Generic registry implementation
 ├── manager_provider.go        # Manager provider interface + ManagerRegistry
-├── provider_registry.go       # Backward compatibility (deprecated)
-├── README.md                  # This file (quick reference)
-├── PROVIDER_PATTERN.md        # Complete provider pattern guide
+├── PROVIDER.md                 # This file
 ├── redfish/                   # Standard Redfish provider
 │   ├── BaseManager.go         # Base Redfish manager implementation
 │   └── BaseManager_test.go    # Base manager tests
@@ -72,23 +64,7 @@ systemRegistry := NewGenericRegistry[SystemProvider]()
 - ✅ No code duplication
 - ✅ Easy to extend
 
-### 2. Provider Registry (`provider_registry.go`)
-
-Backward compatibility file - provides deprecated aliases:
-
-```go
-// Deprecated: Use ManagerRegistry instead
-type ProviderRegistry = ManagerRegistry
-
-// Deprecated: Use NewManagerRegistry instead
-func NewProviderRegistry() *ManagerRegistry {
-    return NewManagerRegistry()
-}
-```
-
-**Note:** This file exists only for backward compatibility. All new code should use `ManagerRegistry` from `manager_provider.go`.
-
-### 3. Manager Provider Interface (`manager_provider.go`)
+### 2. Manager Provider Interface (`manager_provider.go`)
 
 Defines the contract all manager providers must implement, plus the ManagerRegistry:
 
@@ -232,15 +208,13 @@ Extended manager with OpenBMC-specific features.
 **Structure:**
 ```go
 type ExtendManager struct {
-    *redfish.Manager  // Embeds standard manager
-    OEM               *OEM
+    mgr        *redfish.Manager  // private — not embedded, not promoted
+    OpenBmcFan *OpenBmcFan
 }
 
-type OEM struct {
-    OpenBmc *OpenBmc `json:"OpenBmc"`
-}
+func (em *ExtendManager) GetManager() *redfish.Manager { return em.mgr }
 
-type OpenBmc struct {
+type OpenBmcFan struct {
     Profile        *Profile
     FanControllers *FanControllers
     FanZones       *FanZones
@@ -493,8 +467,8 @@ func TestProviderSupports(t *testing.T) {
 ### Integration Tests
 
 ```go
-func TestProviderRegistry(t *testing.T) {
-    registry := NewProviderRegistry()
+func TestManagerRegistry(t *testing.T) {
+    registry := NewManagerRegistry()
     registry.Register(&ExtendProvider{})
     registry.Register(&RedfishProvider{})
     
