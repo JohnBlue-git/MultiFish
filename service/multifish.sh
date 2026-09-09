@@ -5,13 +5,14 @@
 # Supports running with or without configuration file
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-BINARY="$SCRIPT_DIR/multifish"
-PID_FILE="$SCRIPT_DIR/multifish.pid"
-LOG_FILE="$SCRIPT_DIR/multifish.log"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+BINARY="$PROJECT_DIR/multifish"
+PID_FILE="$PROJECT_DIR/multifish.pid"
+LOG_FILE="$PROJECT_DIR/multifish.log"
 
 # Configuration file (can be overridden with -c or --config)
 CONFIG_FILE=""
-DEFAULT_CONFIG="$SCRIPT_DIR/config.yaml"
+DEFAULT_CONFIG="$PROJECT_DIR/config/config.yaml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -38,7 +39,7 @@ function print_debug() {
 
 function build() {
     print_info "Building MultiFish..."
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_DIR"
     if go build -o multifish *.go; then
         print_success "Build completed successfully"
         return 0
@@ -219,7 +220,7 @@ Examples:
     $0 start
 
     # Start with specific config file
-    $0 -c config.production.yaml start
+    $0 -c config/config.production.yaml start
     $0 --config /path/to/custom.yaml start
 
     # Start without any config file (use defaults)
@@ -236,7 +237,7 @@ Examples:
     $0 test
 
     # Restart with different config
-    $0 -c config.production.yaml restart
+    $0 -c config/config.production.yaml restart
 
 Files:
     Binary:  $BINARY

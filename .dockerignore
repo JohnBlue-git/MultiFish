@@ -20,8 +20,8 @@ logs/
 *.log
 
 # Configuration files (copy explicitly if needed)
-config.yaml
-config.production.yaml
+config/config.yaml
+config/config.production.yaml
 *.env
 .env*
 
@@ -52,12 +52,12 @@ temp/
 *.orig
 
 # Service files
-multifish.service
-multifish.sh
+service/multifish.service
+service/multifish.sh
 
 # Postman and examples
-*.postman_collection.json
-examples.sh
+examples/*.postman_collection.json
+examples/examples.sh
 
 # Coverage reports
 coverage.out

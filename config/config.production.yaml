@@ -23,7 +23,7 @@ rate_limit_rate: 5.0      # 5 requests per second (per IP)
 rate_limit_burst: 10      # Maximum burst size of 10
 
 # Authentication (Security) - STRONGLY RECOMMENDED for production
-# See SECURITY.md for detailed configuration guide
+# See docs/SECURITY.md for detailed configuration guide
 auth:
   enabled: true            # Authentication enabled for production
   mode: token             # Options: "none", "basic", "token"

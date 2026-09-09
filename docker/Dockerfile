@@ -44,7 +44,7 @@ WORKDIR /app
 COPY --from=builder /build/multifish .
 
 # Copy example configuration (optional)
-COPY --chown=multifish:multifish config.example.yaml ./config.yaml
+COPY --chown=multifish:multifish config/config.example.yaml ./config.yaml
 
 # Create necessary directories
 RUN mkdir -p /app/logs && \

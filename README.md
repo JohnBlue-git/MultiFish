@@ -1,671 +1,210 @@
 # MultiFish - Multi-BMC Redfish Management API
 
-[![Go Version](https://img.shields.io/badge/Go-1.24+-blue.svg)](https://golang.org)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+MultiFish is a Go service for managing multiple BMC platforms through Redfish and OEM provider implementations. This document is the user-facing guide for installing, configuring, running, and using the service.
 
-**MultiFish** is a powerful REST API service for managing multiple Baseboard Management Controllers (BMCs) through the Redfish protocol. It provides centralized management, automated job scheduling, and support for both standard Redfish and vendor-specific extensions (OpenBMC).
+For internal architecture and project structure, see [DESIGN.md](docs/DESIGN.md).
 
-## 🎯 Key Features
+## Features
 
-- **Multi-BMC Management**: Control multiple servers from a single API endpoint
-- **Provider Architecture**: Support for standard Redfish and vendor-specific extensions
-- **Job Scheduler**: Automate recurring tasks across multiple machines with flexible scheduling
-- **Worker Pools**: Parallel execution with configurable concurrency control
-- **Extensible Design**: Easy to add new BMC types, providers, and actions
-- **Comprehensive Testing**: Unit and integration tests with coverage reporting
-- **Structured Logging**: High-performance zerolog with JSON output and contextual fields
-- **Detailed Execution Logs**: JSON execution logs for complete audit trails
-- **Type-Safe Operations**: Strongly-typed payload validation and error handling
-- **Security Features**: Flexible authentication (Basic/Token), rate limiting, and password masking
+- Manage multiple BMC platforms through a single API.
+- Support common Redfish operations and extended OEM operations.
+- Schedule profile, manager, fan, and PID actions.
+- Authenticate requests with token or basic authentication.
+- Apply configurable rate limiting.
+- Run locally, under systemd, in Docker, or on Kubernetes.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Architecture Overview](#architecture-overview)
-- [Project Structure](#project-structure)
-- [Core Components](#core-components)
 - [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Running the Service](#running-the-service)
 - [Deployment](#deployment)
 - [Security](#security)
-- [API Endpoints](#api-endpoints)
-- [Usage Examples](#usage-examples)
-- [Job Scheduling](#job-scheduling)
+- [API Usage](#api-usage)
+- [API Examples](#api-examples)
+- [Scheduled Jobs](#scheduled-jobs)
 - [Payload Examples](#payload-examples)
-- [Configuration](#configuration)
-- [Development](#development)
-- [Testing](#testing)
-- [Module Documentation](#module-documentation)
-- [Troubleshooting](#troubleshooting)
+- [Logging and Troubleshooting](#logging-and-troubleshooting)
+- [Development and Testing](#development-and-testing)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [Support](#support)
 
-## 🏗️ Architecture Overview
-
-MultiFish follows a modular, layered architecture designed for scalability and extensibility:
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                   REST API (Gin Framework)                       │
-│      /MultiFish/v1/{Platform|JobService|Managers}               │
-└────────────────┬─────────────────────────┬───────────────────────┘
-                 │                         │
-         ┌───────▼─────────┐       ┌──────▼────────────┐
-         │  Platform Mgr   │       │  Job Scheduler    │
-         │  (Connections)  │       │  (Automation)     │
-         └───────┬─────────┘       └──────┬────────────┘
-                 │                        │
-                 │              ┌─────────▼────────────┐
-                 │              │  Job Executor        │
-                 │              │  (Worker Pools)      │
-                 │              └─────────┬────────────┘
-                 │                        │
-         ┌───────▼────────────────────────▼─────────────┐
-         │         Provider Registry                    │
-         │  (Auto-detect BMC type and capabilities)     │
-         └───────┬────────────────────────┬─────────────┘
-                 │                        │
-      ┌──────────▼────────┐     ┌─────────▼──────────┐
-      │  Redfish Provider │     │  Extend Provider   │
-      │  (Standard BMCs)  │     │  (OpenBMC + OEM)   │
-      └──────────┬────────┘     └─────────┬──────────┘
-                 │                        │
-                 └──────────┬─────────────┘
-                            │
-                ┌───────────▼────────────┐
-                │     BMC Hardware       │
-                │  (Multiple Machines)   │
-                └────────────────────────┘
-```
-
-**Architecture Highlights:**
-
-- **API Layer**: RESTful endpoints following Redfish conventions
-- **Platform Management**: Handles machine connections and discovery
-- **Job Scheduling**: Time-based automation with worker pools
-- **Provider System**: Pluggable architecture for different BMC types
-- **Extensibility**: Easy to add new providers, actions, and features
-
-## 📁 Project Structure
-
-```
-MultiFish/
-├── main.go                          # Application entry point
-├── go.mod                           # Go module dependencies
-├── go.sum                           # Dependency checksums
-│
-├── README.md                        # Main project documentation
-├── DEPLOYMENT.md                    # Comprehensive deployment guide
-├── SECURITY.md                      # Security and authentication guide
-│
-├── config.example.yaml              # Example development config
-├── config.production.yaml           # Example production config
-├── .env.example                     # Environment variables example
-├── .env.production.example          # Production environment template
-│
-├── multifish.sh                     # Management script for service control
-├── multifish.service                # Systemd service file
-│
-├── Dockerfile                       # Multi-stage Docker build
-├── .dockerignore                    # Docker build optimization
-│
-├── handler/                         # HTTP request handlers
-│
-├── config/                          # Configuration management
-│
-├── providers/                       # Provider architecture
-│
-├── scheduler/                       # Job scheduling system
-│
-├── middleware/                      # HTTP middleware
-│
-├── utility/                         # Common utilities
-│
-├── tests/                           # Testing infrastructure
-│
-├── payloads/                        # Example payload files
-│
-├── k8s/                             # Kubernetes deployment
-│
-├── examples.sh                      # Interactive API examples (Shell)
-│
-└── MultiFish.postman_collection.json # Postman collection (GUI)
-```
-## 🔧 Core Components
-
-MultiFish is built around several core components that work together to provide comprehensive BMC management:
-
-### 1. **Platform Management** ([Complete Documentation](handler/PLATFORM.md))
-
-The foundation for all BMC interactions, handling connection lifecycle and machine registry.
-
-**Key Features:**
-- Multi-BMC connection management
-- Service type abstraction (Base/Extend)
-- Credential management and security
-- HTTP connection pooling
-- Automatic cleanup and resource management
-
-**Service Types:**
-- **Base Service** - Standard Redfish operations for cross-vendor compatibility
-- **Extend Service** - OpenBMC with OEM extensions for advanced features
-
-**What You Can Do:**
-- Register and manage multiple BMC connections
-- Configure timeouts and TLS settings
-- Switch between service types dynamically
-- Monitor connection health
-
-📚 **[Read Full Platform Management Guide →](handler/PLATFORM.md)**
-
-### 2. **Job Service** ([Complete Documentation](handler/JOBSERVICE.md))
-
-Sophisticated scheduling system for automating BMC operations across multiple machines.
-
-**Key Features:**
-- Flexible scheduling (Once, Daily, Weekly, Monthly)
-- Worker pool for concurrent execution (1-10000 workers)
-- Comprehensive validation (schedule, payload, machines)
-- Detailed JSON execution logs
-- Automatic rescheduling for continuous jobs
-
-**Supported Actions:**
-- `PatchProfile` - Update thermal profiles
-- `PatchManager` - Update manager properties
-- `PatchFanController` - Configure fan controllers
-- `PatchFanZone` - Manage fan zones
-- `PatchPidController` - Tune PID controllers
-
-**What You Can Do:**
-- Schedule recurring BMC operations
-- Execute actions across multiple machines
-- Monitor job execution with detailed logs
-- Dynamically adjust worker pool size
-
-📚 **[Read Full Job Service Guide →](handler/JOBSERVICE.md)**
-
-### 3. **Providers** ([Documentation](providers/README.md))
-
-Pluggable architecture for different BMC types.
-
-**Redfish Provider** - Standard Redfish operations:
-- Manager metadata retrieval
-- Basic property updates
-- Cross-vendor compatibility
-
-**Extend Provider** - OpenBMC with OEM extensions:
-- Thermal profile management (Performance, Balanced, PowerSaver, Custom)
-- Fan controller configuration
-- Fan zone management
-- PID controller tuning
-
-**Provider Selection:**
-```go
-provider := managerProviders.FindProvider(manager)
-// Automatically selects best provider based on capabilities
-```
-
-### 4. **Utility** ([Documentation](utility/README.md))
-
-Common helper functions, error handling, and structured logging.
-
-**Key Utilities:**
-- **Structured Logging**: Zerolog-based logging with zero allocations
-- **Log Levels**: trace, debug, info, warn, error, fatal, panic
-- **Contextual Fields**: Add structured data to all log entries
-- Redfish-compliant error responses
-- Payload validation
-- Type-safe conversions
-- Unique ID generation
-
-**Logging Features:**
-- High-performance zero-allocation logging
-- JSON-structured output for machine parsing
-- Colored console output for development
-- Automatic caller tracking (file:line)
-- Configurable log levels per environment
-
-### 5. **Configuration** ([Documentation](config/README.md))
-
-Flexible configuration system with multiple sources.
-
-**Configuration Sources:**
-- Environment variables
-- YAML configuration files
-- Built-in defaults
-
-**Configurable Options:**
-- Server port
-- Log level
-- Worker pool size
-- Logs directory
-
-**Priority System:** Environment Variables > YAML File > Defaults
-
-### 6. **Testing** ([Documentation](tests/README.md))
-
-Comprehensive test infrastructure.
-
-**Test Coverage:**
-- Unit tests for all modules
-- Integration tests for APIs
-- Coverage reporting with HTML output
-- Test result summaries
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Go 1.24 or higher
-- Access to one or more BMCs with Redfish support
-- `jq` for pretty-printing JSON (optional)
-- `curl` for API testing
+- Go 1.24 or later for local builds
+- A reachable Redfish-compatible BMC for platform operations
+- `curl` and `jq` for command-line examples
 
-### Installation
+### Build and start
 
-1. **Clone the repository:**
-   ```bash
-   cd /path/to/workspace
-   git clone <repository-url>
-   cd Gofish
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   go mod download
-   ```
-
-3. **Build the application:**
-   ```bash
-   go build -o multifish
-   ```
-
-4. **Run the service:**
-
-   **Option A: With defaults**
-   ```bash
-   ./multifish
-   ```
-
-   **Option B: With environment variables**
-   ```bash
-   PORT=9090 LOG_LEVEL=debug WORKER_POOL_SIZE=150 ./multifish
-   ```
-
-   **Option C: With configuration file**
-   ```bash
-   ./multifish -config config.yaml
-   ```
-
-   **Option D: Using management script**
-   ```bash
-   # Make script executable
-   chmod +x multifish.sh
-   
-   # Build and start
-   ./multifish.sh build
-   ./multifish.sh start
-   
-   # With custom config
-   ./multifish.sh -c config.production.yaml start
-   
-   # Check status
-   ./multifish.sh status
-   ```
-
-   The service starts on the configured port (default: `http://localhost:8080`).
-
-## 🚀 Deployment
-
-MultiFish supports multiple deployment methods for different use cases:
-
-### Deployment Options
-
-| Method | Use Case | Quick Command |
-|--------|----------|---------------|
-| **Local Binary** | Development | `./multifish` |
-| **Management Script** | Development/Testing | `./multifish.sh start` |
-| **Systemd Service** | Production (Single Server) | `sudo systemctl start multifish` |
-| **Docker** | Containerized (Single Server) | `docker run -d --name multifish -p 8080:8080 multifish:latest` |
-| **Kubernetes** | Production (Multi-Server) | `kubectl apply -f k8s/` |
-
-### Quick Examples
-
-**Local with management script:**
 ```bash
-./multifish.sh -c config.production.yaml start
+go build -o multifish .
+./multifish
 ```
 
-**Systemd service:**
+The default server listens on `http://localhost:8080`.
+
+To use a configuration file, copy the development template and edit it:
+
 ```bash
-sudo systemctl start multifish
-sudo journalctl -u multifish -f
+cp config/config.example.yaml config/config.yaml
+./multifish -config config/config.yaml
 ```
 
-**Docker:**
-```bash
-docker build -t multifish:latest .
-docker run -d --name multifish -p 8080:8080 multifish:latest
-docker logs -f multifish
-```
+The local runtime file `config/config.yaml` is ignored by Git.
 
-**Kubernetes:**
-```bash
-kubectl apply -f k8s/
-kubectl get pods -l app=multifish
-```
-
-**Kubernetes（啟用 Token Auth，可選）:**
-```bash
-TOKEN1=$(openssl rand -hex 32)
-TOKEN2=$(openssl rand -hex 32)
-kubectl -n default create secret generic multifish-secret \
-  --from-literal=auth-tokens="$TOKEN1,$TOKEN2" \
-  --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n default set env deployment/multifish \
-  AUTH_ENABLED=true AUTH_MODE=token TOKEN_AUTH_TOKENS="$TOKEN1,$TOKEN2"
-```
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive guides.
-
-### Verify Installation
+### Verify the service
 
 ```bash
 curl http://localhost:8080/MultiFish/v1
 ```
 
-Expected response:
-```json
-{
-  "@odata.type": "#ServiceRoot.v1_0_0.ServiceRoot",
-  "@odata.id": "/MultiFish/v1",
-  "Id": "MultiFish",
-  "Name": "MultiFish Service",
-  "Platform": {
-    "@odata.id": "/MultiFish/v1/Platform"
-  },
-  "JobService": {
-    "@odata.id": "/MultiFish/v1/JobService"
-  }
-}
-```
+## Configuration
 
-### Start Testing
+MultiFish can load settings from command-line flags, environment variables, a YAML file, or built-in defaults. Command-line and environment settings take precedence over file values.
 
-**Option 1: Command Line (Shell Script)**
-```bash
-./examples.sh
-# Follow the interactive menu
-```
+### Configuration files
 
-**Option 2: GUI (Postman)**
-```
-1. Install Postman (https://www.postman.com/downloads/)
-2. Import: MultiFish.postman_collection.json
-3. Click any request and hit "Send"
-```
+- [config/config.example.yaml](config/config.example.yaml): development template
+- [config/config.production.yaml](config/config.production.yaml): production template
+- [config/.env.production.example](config/.env.production.example): environment variable template
+- [config/README.md](config/README.md): complete configuration reference
 
-See [Usage Examples](#💡-usage-examples) for detailed instructions.
-
-## � Security
-
-MultiFish provides comprehensive security features to protect your API:
-
-### Authentication & Authorization
-
-Choose from multiple authentication modes:
-
-- **No Authentication** (`none`) - For development/testing
-- **Basic Authentication** (`basic`) - Username/password
-- **Token Authentication** (`token`) - Bearer tokens (recommended for production)
-
-**Quick Configuration:**
-
-```yaml
-# config.yaml
-auth:
-  enabled: true
-  mode: token  # or "basic" or "none"
-  token_auth:
-    tokens:
-      - "your-secret-token-here"
-```
-
-**Environment Variables:**
+Use a YAML file explicitly:
 
 ```bash
-export AUTH_ENABLED=true
-export AUTH_MODE=token
-export TOKEN_AUTH_TOKENS="token1,token2,token3"
+./multifish -config config/config.production.yaml
 ```
 
-**Using the API with authentication:**
+Or set the configuration path through the environment:
 
 ```bash
-# Token authentication
-curl -H "Authorization: Bearer your-token" \
-     http://localhost:8080/MultiFish/v1
-
-# Basic authentication
-curl -u admin:password \
-     http://localhost:8080/MultiFish/v1
+export MULTIFISH_CONFIG=/etc/multifish/config.yaml
+./multifish
 ```
 
-### Rate Limiting
+Common environment variables include `PORT`, `LOG_LEVEL`, `WORKER_POOL_SIZE`, `TOKEN_AUTH_TOKENS`, and `AUTH_MODE`. See [SECURITY.md](docs/SECURITY.md) for authentication settings.
 
-Protect against API abuse with configurable rate limiting:
+## Running the Service
 
-```yaml
-rate_limit_enabled: true
-rate_limit_rate: 10.0    # Requests per second
-rate_limit_burst: 20     # Burst capacity
-```
-
-### Additional Security Features
-
-- **Password Masking**: BMC passwords are never exposed in API responses
-- **Structured Logging**: Authentication failures are logged with IP addresses
-- **HTTPS Support**: Use with reverse proxy (nginx, Caddy)
-
-### Production Security Checklist
-
-- [ ] Enable authentication (`auth.enabled: true`)
-- [ ] Use token mode for production (`auth.mode: token`)
-- [ ] Generate strong tokens: `openssl rand -hex 32`
-- [ ] Enable rate limiting (`rate_limit_enabled: true`)
-- [ ] Use HTTPS (reverse proxy)
-- [ ] Store secrets in environment variables
-- [ ] Monitor authentication failures in logs
-
-**📚 Detailed Documentation:**
-
-- **[Security Guide](SECURITY.md)** - Authentication setup, rate limiting, password masking, and best practices
-
-> **Note:** Certificate-based authentication (mTLS) is not supported as we don't have a PKI infrastructure to verify client certificates. Use token authentication with a reverse proxy for certificate validation if needed.
-
-## �📡 API Endpoints
-
-### Platform Management
-
-```
-GET    /MultiFish/v1/Platform                    # List all Platform
-POST   /MultiFish/v1/Platform                    # Register new platform
-GET    /MultiFish/v1/Platform/{id}               # Get platform details
-PATCH  /MultiFish/v1/Platform/{id}               # Update platform config
-DELETE /MultiFish/v1/Platform/{id}               # Remove platform
-GET    /MultiFish/v1/Platform/{id}/Systems       # List systems
-GET    /MultiFish/v1/Platform/{id}/Managers      # List managers
-```
-
-**📚 See [PLATFORM.md](handler/PLATFORM.md) for detailed platform management documentation including:**
-- Machine configuration options and validation
-- Service types (Base vs Extend)
-- Connection lifecycle management
-- Security best practices
-- Complete API reference with examples
-
-### Manager Operations
-
-```
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}           # Get manager
-PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}           # Update manager
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem       # Get OEM data
-```
-
-### OEM Extended Operations (OpenBMC)
-
-```
-# Profile Management
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/Profile
-PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/Profile
-
-# Fan Controllers
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers/{controllerId}
-PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanControllers/{controllerId}
-
-# Fan Zones
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones/{zoneId}
-PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/FanZones/{zoneId}
-
-# PID Controllers
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers
-GET    /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers/{controllerId}
-PATCH  /MultiFish/v1/Platform/{id}/Managers/{managerId}/Oem/OpenBmc/Fan/PidControllers/{controllerId}
-```
-
-### Job Service
-
-```
-GET    /MultiFish/v1/JobService                   # Get service info
-PATCH  /MultiFish/v1/JobService                   # Update configuration
-GET    /MultiFish/v1/JobService/Jobs              # List all jobs
-POST   /MultiFish/v1/JobService/Jobs              # Create new job
-GET    /MultiFish/v1/JobService/Jobs/{jobId}      # Get job details
-PATCH  /MultiFish/v1/JobService/Jobs/{jobId}      # Update job
-DELETE /MultiFish/v1/JobService/Jobs/{jobId}      # Delete job
-POST   /MultiFish/v1/JobService/Jobs/{jobId}/Actions/Trigger  # Trigger immediately
-POST   /MultiFish/v1/JobService/Jobs/{jobId}/Actions/Cancel   # Cancel job
-```
-
-**📚 See [JOBSERVICE.md](handler/JOBSERVICE.md) for comprehensive job scheduling documentation including:**
-- Schedule types (Once vs Continuous)
-- Supported actions and payloads
-- Worker pool configuration and sizing
-- Execution flow and logging
-- Complete examples and troubleshooting
-
-## 💡 Usage Examples
-
-You can interact with the MultiFish API in two ways:
-
-### Method 1: Shell Script (Command Line)
-
-Use the comprehensive examples script for automated testing and scripting:
+The management script is located at [service/multifish.sh](service/multifish.sh):
 
 ```bash
-# Interactive mode (menu-driven)
-./examples.sh
-
-# Direct execution
-./examples.sh platform          # Platform management examples
-./examples.sh manager           # Manager operations
-./examples.sh profile           # Profile management
-./examples.sh fan-controller    # Fan controller examples
-./examples.sh job-create        # Job creation examples
-./examples.sh all               # Run all examples
+./service/multifish.sh build
+./service/multifish.sh start
+./service/multifish.sh status
+./service/multifish.sh logs
+./service/multifish.sh stop
+./service/multifish.sh restart
+./service/multifish.sh test
 ```
 
-**Best for:**
-- Automation and scripting
-- CI/CD pipelines
-- Quick command-line testing
-- Shell script integration
+Use a specific configuration file:
 
-### Method 2: Postman Collection (GUI)
-
-Import the Postman collection for visual, interactive API testing:
-
-#### **Setup Steps:**
-
-1. **Install Postman**
-   - Download from [postman.com](https://www.postman.com/downloads/)
-   - Or use the web version
-
-2. **Import Collection**
-   ```
-   1. Open Postman
-   2. Click "Import" button
-   3. Select "MultiFish.postman_collection.json"
-   4. Collection appears in left sidebar
-   ```
-
-3. **Configure Variables**
-   ```
-   Collection Variables (click collection > Variables tab):
-   - baseUrl: http://localhost:8080/MultiFish/v1
-   - machineId: your-machine-id
-   - managerId: bmc
-   - fanControllerId: cpu_fan_controller
-   ```
-
-4. **Start Making Requests**
-   - Click any request in the collection
-   - Click "Send" button
-   - View response in lower panel
-
-#### **Available Requests:**
-
-**Service Root**
-- Get API information
-
-**Platform Collection**
-- List All Machines
-- Add Machine
-- Get Machine Details
-- Update Machine Configuration
-- Delete Machine
-
-**Managers**
-- Get Manager Details
-- Update ServiceIdentification
-
-**OEM OpenBMC**
-- Profile: Get/Update (Acoustic, Performance, etc.)
-- Fan Controllers: Get/Update
-
-**Best for:**
-- Visual API exploration
-- Manual testing and debugging
-- Team collaboration
-- Learning the API structure
-- Quick prototyping
-
-#### **Example Workflow in Postman:**
-
-```
-1. Add a machine:
-   Platform > Add Machine > Send
-
-2. Get manager details:
-   Managers > Get Manager Details > Send
-
-3. Update profile:
-   OEM OpenBMC > Profile > Update Profile - Performance > Send
-
-4. Update fan controller:
-   OEM OpenBMC > Fan Controllers > Update Fan Controller > Send
+```bash
+./service/multifish.sh -c config/config.production.yaml start
 ```
 
-**💡 Tip:** You can also generate code snippets from Postman (Code button) for curl, Python, JavaScript, etc.
+## Deployment
 
----
+### Systemd
 
-### API Examples (curl)
+Edit [service/multifish.service](service/multifish.service) for the target user and installation path, then install it:
 
-### 1. Register a Platform
+```bash
+sudo cp service/multifish.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now multifish
+sudo systemctl status multifish
+```
+
+### Docker
+
+The maintained Dockerfile is [docker/Dockerfile](docker/Dockerfile). Build from the repository root so the Docker build context includes the Go module and source files:
+
+```bash
+docker build -f docker/Dockerfile -t multifish:latest .
+docker run -d --name multifish -p 8080:8080 multifish:latest
+```
+
+### Kubernetes
+
+Review the manifests in [k8s/](k8s/) and configure the Secret and ConfigMap for the target environment before applying them:
+
+```bash
+kubectl apply -f k8s/
+```
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment procedures and operational details.
+
+## Security
+
+Authentication and rate limiting should be enabled for any network-facing deployment. At minimum:
+
+- use strong, unique authentication tokens;
+- avoid committing production secrets or local configuration files;
+- restrict BMC network access to trusted service hosts;
+- use HTTPS or a protected network path for API traffic;
+- review logs for authentication failures and unexpected platform access.
+
+See [SECURITY.md](docs/SECURITY.md) for the security model, authentication modes, and production checklist.
+
+## API Usage
+
+The API base path is `/MultiFish/v1`.
+
+### Platform management
+
+```bash
+# List registered platforms
+curl http://localhost:8080/MultiFish/v1/Platform
+
+# Register a platform
+curl -X POST http://localhost:8080/MultiFish/v1/Platform \
+  -H 'Content-Type: application/json' \
+  -d @payloads/patch_profile.json
+
+# Read a platform
+curl http://localhost:8080/MultiFish/v1/Platform/server1
+```
+
+### Manager and OEM operations
+
+```bash
+curl http://localhost:8080/MultiFish/v1/Platform/server1/Managers
+curl http://localhost:8080/MultiFish/v1/Platform/server1/Managers/bmc
+```
+
+Available platform, manager, fan, profile, and PID operations are documented in [handler/PLATFORM.md](handler/PLATFORM.md).
+
+### Job service
+
+```bash
+# List jobs
+curl http://localhost:8080/MultiFish/v1/JobService/Jobs
+
+# Create a job from a payload file
+curl -X POST http://localhost:8080/MultiFish/v1/JobService/Jobs \
+  -H 'Content-Type: application/json' \
+  -d @payloads/continuous_daily.json
+```
+
+Job lifecycle, schedules, actions, and response formats are documented in [handler/JOBSERVICE.md](handler/JOBSERVICE.md).
+
+## API Examples
+
+The following examples show a typical platform workflow. Replace the endpoint,
+credentials, and platform identifiers with values for your environment.
+
+### Register a platform
 
 ```bash
 curl -X POST http://localhost:8080/MultiFish/v1/Platform \
-  -H "Content-Type: application/json" \
+  -H 'Content-Type: application/json' \
   -d '{
     "Id": "server-1",
     "Name": "Production Server 1",
@@ -677,780 +216,191 @@ curl -X POST http://localhost:8080/MultiFish/v1/Platform \
   }'
 ```
 
-### 2. Update Thermal Profile
+### Update a thermal profile
 
 ```bash
 curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc/Oem/OpenBmc/Fan/Profile \
-  -H "Content-Type: application/json" \
-  -d '{
-    "Profile": "Performance"
-  }'
+  -H 'Content-Type: application/json' \
+  -d '{"Profile": "Performance"}'
 ```
 
-**Valid Profiles:**
-- `Performance` - Maximum performance, higher power consumption
-- `Balanced` - Optimal balance of performance and efficiency
-- `PowerSaver` - Minimize power consumption
-- `Custom` - User-defined settings
+Common profiles include `Performance`, `Balanced`, `PowerSaver`, and `Custom`.
 
-### 3. Configure Fan Controller
+### Configure a fan controller
 
 ```bash
 curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc/Oem/OpenBmc/Fan/FanControllers/cpu_fan \
-  -H "Content-Type: application/json" \
-  -d '{
-    "Multiplier": 1.2,
-    "StepDown": 2,
-    "StepUp": 5
-  }'
+  -H 'Content-Type: application/json' \
+  -d '{"Multiplier": 1.2, "StepDown": 2, "StepUp": 5}'
 ```
 
-### 4. Update Manager Properties
+### Update manager properties
 
 ```bash
 curl -X PATCH http://localhost:8080/MultiFish/v1/Platform/server-1/Managers/bmc \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ServiceIdentification": "Production BMC v2.0"
-  }'
+  -H 'Content-Type: application/json' \
+  -d '{"ServiceIdentification": "Production BMC v2.0"}'
 ```
 
-## ⏰ Job Scheduling
+## Scheduled Jobs
 
-The Job Service provides powerful automation for recurring BMC operations. Create jobs that execute on schedule across multiple machines.
+Jobs can run once or continuously according to a schedule. Common uses include:
 
-### Quick Start
+- applying a thermal profile at a fixed time;
+- changing fan controller settings during a maintenance window;
+- applying different profiles on weekdays and weekends;
+- managing multiple managers on one platform.
 
-**Create a one-time job:**
-```bash
-curl -X POST http://localhost:8080/MultiFish/v1/JobService/Jobs \
-  -H "Content-Type: application/json" \
-  -d @payloads/patch_profile.json
-```
+The scheduler uses the configured worker pool to bound concurrent execution. Validate payloads before submitting production jobs and monitor job status after creation.
 
-**Create a daily recurring job:**
-```bash
-curl -X POST http://localhost:8080/MultiFish/v1/JobService/Jobs \
-  -H "Content-Type: application/json" \
-  -d @payloads/continuous_daily.json
-```
+## Payload Examples
 
-### Common Use Cases
+Reusable JSON payloads are available in [payloads/](payloads/):
 
-**Daily Power Management:**
-- Switch to PowerSaver mode at night (10 PM)
-- Switch to Performance mode in morning (8 AM)
+- `patch_profile.json`
+- `patch_profile_multiple_managers.json`
+- `patch_manager.json`
+- `patch_fan_controller.json`
+- `patch_fan_zone.json`
+- `patch_pid_controller.json`
+- `continuous_daily.json`
+- `continuous_weekdays.json`
+- `continuous_monthly.json`
 
-**Weekday Workload:**
-- Performance mode Monday-Friday at 8 AM
-- Balanced mode for weekends
+## Usage Examples
 
-**Monthly Maintenance:**
-- Update BMC configurations on 1st of month
-- Reset counters on 15th of month
+### Shell examples
 
-### Job Features
-
-- ⏱️ **Flexible Scheduling**: Once, daily, weekly, monthly patterns
-- 🔄 **Auto-Rescheduling**: Continuous jobs reschedule automatically
-- 🚀 **Immediate Trigger**: Override schedule and run now
-- 🔢 **Worker Pools**: Configurable concurrency (1-10000 workers)
-- 📊 **Execution Logs**: Detailed JSON logs per execution
-- ✅ **Validation**: Schedule, payload, and machine validation
-- 🎯 **Multi-machine**: Execute across multiple BMCs simultaneously
-
-**📚 For complete job scheduling documentation, see [JOBSERVICE.md](handler/JOBSERVICE.md)**
-
-**Topics covered:**
-- Schedule types and patterns (Once, Continuous, Daily, Weekly, Monthly)
-- All supported actions (PatchProfile, PatchManager, PatchFanController, etc.)
-- Payload structures and validation
-- Worker pool sizing and configuration
-- Execution flow and lifecycle
-- Detailed troubleshooting guide
-- Best practices and examples
-
-## 📝 Payload Examples
-
-All payload examples are available in the `payloads/` directory:
-
-### Profile Update (`payloads/patch_profile.json`)
-
-```json
-{
-  "Name": "Update Performance Profile",
-  "Machines": ["machine-1", "machine-2"],
-  "Action": "PatchProfile",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "Payload": {
-        "Profile": "Performance"
-      }
-    }
-  ],
-  "Schedule": {
-    "Type": "Once",
-    "Time": "08:00:00",
-    "Period": null
-  }
-}
-```
-
-### Multiple Managers (`payloads/patch_profile_multiple_managers.json`)
-
-```json
-{
-  "Name": "Update Multiple Managers",
-  "Machines": ["machine-1"],
-  "Action": "PatchProfile",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "Payload": {"Profile": "Performance"}
-    },
-    {
-      "ManagerID": "bmc2",
-      "Payload": {"Profile": "Balanced"}
-    }
-  ],
-  "Schedule": {
-    "Type": "Once",
-    "Time": "08:00:00",
-    "Period": null
-  }
-}
-```
-
-### Manager Update (`payloads/patch_manager.json`)
-
-```json
-{
-  "Name": "Update Manager Service Identification",
-  "Machines": ["machine-1"],
-  "Action": "PatchManager",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "Payload": {
-        "ServiceIdentification": "Production BMC v2.1"
-      }
-    }
-  ],
-  "Schedule": {
-    "Type": "Once",
-    "Time": "09:00:00",
-    "Period": null
-  }
-}
-```
-
-### Fan Controller (`payloads/patch_fan_controller.json`)
-
-```json
-{
-  "Name": "Update Fan Controller Settings",
-  "Machines": ["machine-1"],
-  "Action": "PatchFanController",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "FanControllerID": "cpu_fan_controller",
-      "Payload": {
-        "Multiplier": 1.2,
-        "StepDown": 2,
-        "StepUp": 5
-      }
-    }
-  ],
-  "Schedule": {
-    "Type": "Once",
-    "Time": "10:00:00",
-    "Period": null
-  }
-}
-```
-
-### Daily Recurring (`payloads/continuous_daily.json`)
-
-```json
-{
-  "Name": "Daily Profile Update",
-  "Machines": ["machine-1"],
-  "Action": "PatchProfile",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "Payload": {"Profile": "PowerSaver"}
-    }
-  ],
-  "Schedule": {
-    "Type": "Continuous",
-    "Time": "22:00:00",
-    "Period": {
-      "StartDay": "2026-02-10",
-      "EndDay": "2026-12-31",
-      "DaysOfWeek": [],
-      "DaysOfMonth": null
-    }
-  }
-}
-```
-
-### Weekday Recurring (`payloads/continuous_weekdays.json`)
-
-```json
-{
-  "Name": "Weekday Performance Mode",
-  "Machines": ["machine-1"],
-  "Action": "PatchProfile",
-  "Payload": [
-    {
-      "ManagerID": "bmc",
-      "Payload": {"Profile": "Performance"}
-    }
-  ],
-  "Schedule": {
-    "Type": "Continuous",
-    "Time": "08:00:00",
-    "Period": {
-      "StartDay": "2026-02-10",
-      "EndDay": "2026-12-31",
-      "DaysOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      "DaysOfMonth": null
-    }
-  }
-}
-```
-
-See the [`payloads/`](payloads/) directory for all examples.
-
-## ⚙️ Configuration
-
-MultiFish supports multiple configuration sources with a clear priority system. See the [Config Documentation](config/README.md) for full details.
-
-### Configuration Options
-
-| Option | Env Variable | Default | Description |
-|--------|--------------|---------|-------------|
-| `Port` | `PORT` | `8080` | HTTP server port (1-65535) |
-| `LogLevel` | `LOG_LEVEL` | `info` | Logging level (debug, info, warn, error) |
-| `WorkerPoolSize` | `WORKER_POOL_SIZE` | `99` | Maximum concurrent jobs (1-10000) |
-| `LogsDir` | `LOGS_DIR` | `./logs` | Directory for job execution logs |
-
-### Configuration Priority
-
-Configuration is loaded in this order (later overrides earlier):
-
-1. **Built-in Defaults** - Sensible defaults for all settings
-2. **YAML Configuration File** - File-based configuration
-3. **Environment Variables** - Runtime configuration (highest priority)
-
-### Using Environment Variables
-
-**Quick start:**
-```bash
-PORT=9090 LOG_LEVEL=debug WORKER_POOL_SIZE=150 ./multifish
-```
-
-**Using .env file:**
-```bash
-# Copy example and customize
-cp .env.example .env
-
-# Edit .env with your settings
-nano .env
-
-# Load and run
-export $(cat .env | xargs)
-./multifish
-```
-
-**Example .env:**
-```bash
-PORT=8080
-LOG_LEVEL=info
-WORKER_POOL_SIZE=99
-LOGS_DIR=./logs
-```
-
-### Using YAML Configuration
-
-**Development (config.example.yaml):**
-```yaml
-port: 8080
-log_level: debug
-worker_pool_size: 50
-logs_dir: ./logs
-```
-
-**Production (config.production.yaml):**
-```yaml
-port: 8080
-log_level: info
-worker_pool_size: 100
-logs_dir: /var/log/multifish
-```
-
-**Run with config file:**
-```bash
-./multifish -config config.yaml
-```
-
-### Runtime Configuration Updates
-
-Update worker pool size dynamically via API:
+The executable [examples/examples.sh](examples/examples.sh) supports focused examples or the complete sequence:
 
 ```bash
-curl -X PATCH http://localhost:8080/MultiFish/v1/JobService \
-  -H "Content-Type: application/json" \
-  -d '{
-    "WorkerPoolSize": 150
-  }'
+./examples/examples.sh platform
+./examples/examples.sh manager
+./examples/examples.sh profile
+./examples/examples.sh fan-controller
+./examples/examples.sh job-create
+./examples/examples.sh all
 ```
 
-### Container and Orchestration Deployment
-
-For production deployments using containers and orchestration:
-
-📚 **[Complete Deployment Guide](DEPLOYMENT.md)** includes:
-- **[Docker Deployment](DEPLOYMENT.md#docker-deployment)** - Dockerfile, multi-stage builds, container management
-- **[Kubernetes](DEPLOYMENT.md#kubernetes-deployment)** - Complete K8s manifests, ConfigMaps, Secrets, and auth enable flow
-- **[Systemd Service](DEPLOYMENT.md#systemd-service-setup)** - Native Linux service configuration
-- **[Management Script](DEPLOYMENT.md#running-multifish)** - Using multifish.sh for service control
-
-💡 **Tip:** Kubernetes manifests currently default to `AUTH_ENABLED=false` / `AUTH_MODE=none`; enable token auth via the command flow in `DEPLOYMENT.md` when needed.
-
-**Note:** Only `WorkerPoolSize` can be updated at runtime. Other settings require restart.
-
-### Configuration Best Practices
-
-1. **Development**: Use defaults or `config.example.yaml`
-2. **Production**: Use `config.production.yaml` or environment variables
-3. **Containers**: Use environment variables for portability
-4. **Kubernetes**: Use ConfigMaps and Secrets
-5. **Security**: Never commit sensitive data to config files
-6. **Validation**: Configuration is validated at startup
-
-### Platform Configuration
-
-When registering Platform:
-
-```json
-{
-  "Id": "unique-id",
-  "Name": "Display name",
-  "Type": "Base|Extend",
-  "Endpoint": "https://bmc-address",
-  "Username": "admin",
-  "Password": "password",
-  "Insecure": true,
-  "HTTPClientTimeout": 30,
-  "DisableEtagMatch": true
-}
-```
-
-**Platform Types:**
-- **Base**: Standard Redfish BMC
-- **Extend**: OpenBMC with OEM extensions
-
-## � Logging
-
-MultiFish uses [zerolog](https://github.com/rs/zerolog) for high-performance structured logging.
-
-### Log Levels
-
-Configure via `LOG_LEVEL` environment variable or `log_level` in config file:
-
-- `trace` - Very detailed debugging (development only)
-- `debug` - Debugging information
-- `info` - General informational messages (recommended for production)
-- `warn` - Warning messages
-- `error` - Error messages
-- `fatal` - Fatal errors (exits program)
-- `panic` - Panic-level errors
-
-### Log Output
-
-**Console Output (Development):**
-```
-2:15PM INF Configuration loaded logLevel=debug port=8080 workerPoolSize=99
-2:15PM INF MultiFish API server starting address=:8080
-2:15PM INF Added machine machineID=machine1 endpoint=https://bmc1 type=ExtendService
-2:15PM INF Job created jobID=Job-1707489234567890 nextRun=2024-02-09T20:00:00Z
-2:15PM INF Executing job activeWorkers=1 jobID=Job-1707489234567890 poolSize=99
-2:15PM INF Successfully executed action action=PatchProfile duration=1.2s jobID=Job-1 machineID=machine1
-```
-
-**JSON Output (Production):**
-```json
-{"level":"info","time":"2024-02-09T14:15:00Z","caller":"main.go:42","message":"Configuration loaded","port":8080,"logLevel":"info","workerPoolSize":99}
-{"level":"info","time":"2024-02-09T14:15:01Z","caller":"main.go:88","message":"MultiFish API server starting","address":":8080"}
-{"level":"info","time":"2024-02-09T14:16:00Z","caller":"handler/handlePlatform.go:140","message":"Added machine","machineID":"machine1","endpoint":"https://bmc1","type":"ExtendService"}
-{"level":"info","time":"2024-02-09T14:17:00Z","caller":"job_service.go:118","message":"Job created","jobID":"Job-1707489234567890","nextRun":"2024-02-09T20:00:00Z"}
-```
-
-### Logging Best Practices
-
-**Good - Structured with context:**
-```go
-log := utility.GetLogger()
-log.Info().
-    Str("jobID", job.ID).
-    Int("machineCount", len(machines)).
-    Str("action", string(action)).
-    Msg("Job created")
-```
-
-**Avoid - Unstructured:**
-```go
-log.Printf("Job %s created with %d machines", job.ID, len(machines))
-```
-
-### Log Files
-
-**Application Logs:**
-- Console output (stdout/stderr)
-- Configurable via log level
-
-**Job Execution Logs:**
-- Location: `logs/`
-- Format: JSON files per execution
-- Contains: Job details, machine results, errors, timing
-
-**Example job log:**
-```json
-{
-  "job_id": "job1",
-  "machine_id": "machine1",
-  "action": "PatchProfile",
-  "timestamp": "2024-02-09T20:00:00Z",
-  "status": "Success",
-  "duration": "1.5s",
-  "payload": {...}
-}
-```
-
-### Production Logging Setup
-
-**Recommended configuration:**
-```yaml
-# config.production.yaml
-log_level: "info"  # or "warn" for reduced verbosity
-```
-
-**Capture logs to file:**
-```bash
-# Redirect to file
-./multifish 2>&1 | tee multifish.log
-
-# With log rotation (using logrotate)
-./multifish >> /var/log/multifish/app.log 2>&1
-```
-
-**Docker logging:**
-```yaml
-services:
-  multifish:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-**Centralized logging (e.g., ELK Stack):**
-```bash
-# Parse JSON logs
-./multifish 2>&1 | filebeat -c filebeat.yml
-```
-
-### Debugging
-
-Enable debug logging temporarily:
-```bash
-LOG_LEVEL=debug ./multifish
-```
-
-Or via API (requires restart):
-```bash
-# Edit config file and restart
-sed -i 's/log_level: info/log_level: debug/' config.yaml
-```
-
-## �🔨 Development
-
-### Project Setup
+Set `MULTIFISH_URL` when the API is not at the default address:
 
 ```bash
-# Clone repository
-git clone <repository-url>
-cd Gofish
+MULTIFISH_URL=http://localhost:9090/MultiFish/v1 ./examples/examples.sh platform
+```
 
-# Install dependencies
+### Postman
+
+Import [examples/MultiFish.postman_collection.json](examples/MultiFish.postman_collection.json) into Postman for interactive API requests.
+
+## Logging and Troubleshooting
+
+The default log level and output directory are controlled by configuration. For a service managed by systemd:
+
+```bash
+sudo journalctl -u multifish -f
+sudo systemctl status multifish
+```
+
+For a local process, inspect the configured log file or run the management script:
+
+```bash
+./service/multifish.sh logs
+```
+
+### Service will not start
+
+1. Check whether port 8080 is already in use.
+2. Confirm the selected configuration file exists and is readable.
+3. Check authentication and rate-limit settings for validation errors.
+4. Run `./service/multifish.sh build` and inspect the output.
+
+### Platform registration fails
+
+1. Verify the BMC endpoint is reachable from the MultiFish host.
+2. Confirm credentials and the provider type.
+3. Check TLS and `Insecure` settings for the target environment.
+4. Inspect the service logs for provider or connection errors.
+
+### Jobs do not execute
+
+1. Confirm the job payload passed validation.
+2. Check the job status through `/JobService/Jobs`.
+3. Verify the schedule time and timezone.
+4. Confirm the worker pool is not exhausted.
+
+## Development and Testing
+
+Install dependencies and run the service locally:
+
+```bash
 go mod download
-
-# Run in development mode
-go run main.go
+go run .
 ```
 
-### Code Structure
-
-- **Handlers** (`handle*.go`): API endpoint implementations
-- **Providers** (`providers/`): BMC type abstraction layer
-- **Scheduler** (`scheduler/`): Job scheduling and execution
-- **Utility** (`utility/`): Shared helper functions
-- **Tests** (`tests/`, `*_test.go`): Testing infrastructure
-
-### Adding a New Action
-
-1. **Define action type** in `scheduler/job_action.go`:
-   ```go
-   const ActionNewAction ActionType = "NewAction"
-   ```
-
-2. **Create payload structure** in `scheduler/payload_models.go`:
-   ```go
-   type ExecuteNewActionPayload struct {
-       ManagerID string
-       Payload   NewActionType
-   }
-   ```
-
-3. **Implement validation**:
-   ```go
-   func ValidateNewActionPayloads(payloads Payload) error {
-       // Validation logic
-   }
-   ```
-
-4. **Add execution handler** in `scheduler/job_action.go`:
-   ```go
-   func (dae *DefaultActionExecutor) ExecuteNewAction(machine interface{}, payload Payload) error {
-       // Execution logic
-   }
-   ```
-
-5. **Create example payload** in `payloads/new_action.json`
-
-6. **Write tests** in `scheduler/*_test.go`
-
-7. **Update documentation**
-
-## 🧪 Testing
-
-### Run All Tests
+Run all tests:
 
 ```bash
-./tests/run_all_tests.sh
+go test ./...
 ```
 
-### Generate Coverage Report
+Focused test and coverage helpers are documented in [tests/README.md](tests/README.md).
 
-```bash
-./tests/coverage_report.sh
-```
+## Documentation
 
-View HTML report:
-```bash
-open tests/reports/coverage_*.html
-```
-
-### Run Specific Tests
-
-```bash
-# Test a specific package
-./tests/run_specific_test.sh multifish/scheduler
-
-# Test a specific function
-./tests/run_specific_test.sh multifish/scheduler TestJobCreation
-
-# Test matching pattern
-./tests/run_specific_test.sh multifish/scheduler TestJob.*
-```
-
-### Test Coverage Goals
-
-| Module | Target | Status |
-|--------|--------|--------|
-| Config | 90%+ | ✅ |
-| Scheduler | 80%+ | ✅ |
-| Utility | 85%+ | ✅ |
-| Providers | 75%+ | ✅ |
-| Handlers | 70%+ | ✅ |
-
-## 📚 Module Documentation
-
-Comprehensive documentation for each module:
-
-### Core Features
-- **[Platform Management](handler/PLATFORM.md)** - BMC connection management, machine registration, service types, and API reference
-- **[Job Service](handler/JOBSERVICE.md)** - Job scheduling, automation, worker pools, and execution logging
-
-### Internal Modules
-- **[Config](config/README.md)** - Configuration management and environment variables
-- **[Providers](providers/README.md)** - Provider architecture and BMC type support
-- **[Scheduler](scheduler/README.md)** - Job scheduling internals and implementation details
-- **[Utility](utility/README.md)** - Helper functions, logging, and error handling
-- **[Tests](tests/README.md)** - Testing infrastructure and guidelines
-
-### Integration Guides
-- **[Security](SECURITY.md)** - Authentication setup, security features, and operational best practices
-
-## 🔍 Troubleshooting
-
-### Service Won't Start
-
-**Check:**
-```bash
-# Verify port is available
-lsof -i :8080
-
-# Check Go version
-go version  # Should be 1.24+
-
-# Verify dependencies
-go mod download
-```
-
-### Platform Registration Fails
-
-**Common issues:**
-- BMC endpoint unreachable
-- Invalid credentials
-- Network firewall blocking connection
-- SSL certificate issues (use `"Insecure": true` for testing)
-
-**Debug:**
-```bash
-# Test BMC connectivity
-curl -k https://bmc-address/redfish/v1
-
-# Check MultiFish logs
-# (Add logging to main.go if needed)
-```
-
-### Job Not Executing
-
-**Check:**
-1. Job status:
-   ```bash
-   curl http://localhost:8080/MultiFish/v1/JobService/Jobs/{jobId}
-   ```
-
-2. Verify NextRunTime is in the future
-3. Check worker pool capacity:
-   ```bash
-   curl http://localhost:8080/MultiFish/v1/JobService
-   ```
-
-4. Review job logs in `logs/`
-
-### Invalid Payload Error
-
-**Common causes:**
-- Unknown field in payload
-- Invalid profile value
-- Empty required fields
-- Wrong payload type for action
-
-**Solution:**
-- Check payload examples in `payloads/` directory
-- Review module documentation for allowed fields
-- Validate JSON syntax
-
-### Performance Issues
-
-**Symptoms:**
-- Slow API responses
-- Jobs queuing up
-- High CPU usage
-
-**Solutions:**
-1. Increase worker pool size
-2. Reduce job frequency
-3. Check BMC response times
-4. Monitor system resources
-
-## 🤝 Contributing
-
-### Guidelines
-
-1. **Code Style**: Follow Go conventions and existing patterns
-2. **Testing**: Add tests for all new features
-3. **Documentation**: Update relevant README files
-4. **Commits**: Use clear, descriptive commit messages
-
-### Development Workflow
-
-1. Create feature branch
-2. Implement changes with tests
-3. Run test suite: `./tests/run_all_tests.sh`
-4. Generate coverage: `./tests/coverage_report.sh`
-5. Update documentation
-6. Submit pull request
-
-### Adding New Providers
-
-See [Providers README](providers/README.md) for detailed guide on implementing new BMC type providers.
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Gofish](https://github.com/stmcginnis/gofish) - Redfish and Swordfish client library
-- Uses [Gin](https://github.com/gin-gonic/gin) - HTTP web framework
-- Inspired by Redfish specification from DMTF
-
-## 📞 Support
-
-For issues, questions, or contributions:
-- Check the [module documentation](#module-documentation)
-- Review [examples](examples.sh) and [payloads](payloads/)
-- Read feature guides: [Platform Management](handler/PLATFORM.md) | [Job Service](handler/JOBSERVICE.md)
-- Open an issue on the repository
-
-## 🔗 Quick Links
-
-### Getting Started
-- **[Quick Start Guide](#quick-start)** - Get up and running in minutes
-- **[Complete Deployment Guide](DEPLOYMENT.md)** - Comprehensive deployment documentation
+- [Design guide and project structure](docs/DESIGN.md)
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [Security guide](docs/SECURITY.md)
+- [Configuration reference](config/README.md)
+- [Platform API guide](handler/PLATFORM.md)
+- [Job Service guide](handler/JOBSERVICE.md)
+- [Provider guide](providers/PROVIDER.md)
+- [Scheduler guide](scheduler/SCEDULER.md)
+- [Test guide](tests/README.md)
 
 ### Feature Documentation
-- **[Platform Management](handler/PLATFORM.md)** - Complete guide to managing BMC connections
-  - Machine configuration and validation
-  - Service types (Base vs Extend)
-  - Connection lifecycle
-  - API reference with examples
-  
-- **[Job Service](handler/JOBSERVICE.md)** - Comprehensive job scheduling guide
-  - Schedule types and patterns
-  - All supported actions
-  - Worker pool configuration
-  - Execution logs and troubleshooting
 
-### Module Documentation
-- [Config Module](config/README.md) - Configuration system
-- [Providers Module](providers/README.md) - Provider architecture
-- [Scheduler Module](scheduler/README.md) - Scheduling internals
-- [Utility Module](utility/README.md) - Common utilities
-- [Testing Guide](tests/README.md) - Test infrastructure
+- [Platform Management](handler/PLATFORM.md): platform registration, managers, and provider operations
+- [Job Service](handler/JOBSERVICE.md): schedules, actions, worker pools, and execution logs
 
-### Deployment & Operations
-- [Complete Deployment Guide](DEPLOYMENT.md) - All deployment methods
-- [Management Script Usage](DEPLOYMENT.md#using-the-management-script) - multifish.sh guide
-- [Systemd Service Setup](DEPLOYMENT.md#systemd-service-setup) - Native Linux service
-- [Docker Deployment](DEPLOYMENT.md#docker-deployment) - Container deployment
-- [Kubernetes Deployment](DEPLOYMENT.md#kubernetes-deployment) - K8s orchestration
+### Internal Module Documentation
 
-### Guides & Examples
-- [Security Guide](SECURITY.md) - Security features
-- [Examples Script](examples.sh) - Interactive CLI examples
-- [Postman Collection](MultiFish.postman_collection.json) - GUI testing
-- [Payload Examples](payloads/) - Job payload templates
+- [Config module](config/README.md): configuration sources and validation
+- [Providers module](providers/PROVIDER.md): provider architecture and BMC support
+- [Scheduler module](scheduler/SCEDULER.md): job scheduling internals
+- [Utility module](utility/README.md): shared helpers, logging, and errors
+- [Testing guide](tests/README.md): test commands and coverage helpers
 
----
+## Contributing
 
-**MultiFish** - Centralized BMC Management Made Simple
+1. Follow Go conventions and the existing package patterns.
+2. Add focused tests for new behavior and bug fixes.
+3. Update the relevant user or design documentation.
+4. Run `go test ./...` before submitting changes.
+5. Keep commits focused and describe the behavior they change.
+
+Provider additions should follow the extension model described in [DESIGN.md](docs/DESIGN.md#provider-extension-model) and the guidance in [providers/PROVIDER.md](providers/PROVIDER.md).
+
+## Acknowledgements
+
+- Built with [Gofish](https://github.com/stmcginnis/gofish), a Redfish and Swordfish client library.
+- Uses [Gin](https://github.com/gin-gonic/gin) for the HTTP web framework.
+- Inspired by the Redfish specification from [DMTF](https://www.dmtf.org/standards/redfish).
+
+## Support
+
+For issues or questions:
+
+1. Check [Logging and Troubleshooting](#logging-and-troubleshooting).
+2. Review the relevant [module documentation](#documentation).
+3. Try the [shell examples](#shell-examples) or the [Postman collection](#postman).
+4. Open an issue in the repository with the version, configuration shape, request, and relevant logs. Do not include credentials or tokens.
+
+### Quick Links
+
+- [Quick Start](#quick-start)
+- [Design guide](docs/DESIGN.md)
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [Security guide](docs/SECURITY.md)
+- [Shell examples](examples/examples.sh)
+- [Postman collection](examples/MultiFish.postman_collection.json)
+- [Payload examples](payloads/)

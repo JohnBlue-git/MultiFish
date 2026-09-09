@@ -75,7 +75,7 @@ func (c *Config) loadFromFile(path string) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Warn().Msgf("Config file not found: %s", path)
-			return fmt.Errorf("configuration file not found at path '%s'. Create a config file using 'cp config.example.yaml %s' or specify a different path", path, path)
+				  return fmt.Errorf("configuration file not found at path '%s'. Create a config file using 'cp config/config.example.yaml %s' or specify a different path", path, path)
 		}
 		log.Error().Msgf("Failed to read config file '%s': %v", path, err)
 		return err

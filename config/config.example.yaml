@@ -24,7 +24,7 @@ rate_limit_rate: 10.0     # Requests per second (per IP)
 rate_limit_burst: 20      # Maximum burst size
 
 # Authentication (Security)
-# See SECURITY.md for detailed configuration guide
+# See docs/SECURITY.md for detailed configuration guide
 auth:
   enabled: false           # Set to true to enable authentication
   mode: none              # Options: "none", "basic", "token"

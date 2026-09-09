@@ -43,7 +43,7 @@ auth:
 
 #### Production Configuration
 ```yaml
-# config.production.yaml
+# config/config.production.yaml
 port: 8080
 log_level: info
 worker_pool_size: 100
@@ -66,7 +66,7 @@ auth:
 Place `config.yaml` in the same directory as the binary:
 ```bash
 # Creates or edits config.yaml
-cp config.example.yaml config.yaml
+cp config/config.example.yaml config/config.yaml
 nano config.yaml
 ```
 
@@ -100,42 +100,42 @@ The `multifish.sh` script provides convenient management commands:
 #### Basic Usage
 ```bash
 # Build the binary
-./multifish.sh build
+./service/multifish.sh build
 
 # Start with default config (config.yaml if exists)
-./multifish.sh start
+./service/multifish.sh start
 
 # Start with specific config
-./multifish.sh -c config.production.yaml start
+./service/multifish.sh -c config/config.production.yaml start
 
 # Start without config (remove config.yaml first)
 rm config.yaml
-./multifish.sh start
+./service/multifish.sh start
 
 # Check status
-./multifish.sh status
+./service/multifish.sh status
 
 # View logs
-./multifish.sh logs
+./service/multifish.sh logs
 
 # Stop the service
-./multifish.sh stop
+./service/multifish.sh stop
 
 # Restart
-./multifish.sh restart
+./service/multifish.sh restart
 
 # Test API
-./multifish.sh test
+./service/multifish.sh test
 ```
 
 #### Using Environment Variables
 ```bash
 # Set config via environment variable
 export MULTIFISH_CONFIG=/path/to/config.production.yaml
-./multifish.sh start
+./service/multifish.sh start
 
 # Or use inline
-MULTIFISH_CONFIG=/path/to/config.production.yaml ./multifish.sh start
+MULTIFISH_CONFIG=/path/to/config.production.yaml ./service/multifish.sh start
 ```
 
 ### Direct Binary Execution
@@ -147,13 +147,13 @@ Run the binary directly for more control:
 ./multifish
 
 # With specific config
-./multifish -config config.production.yaml
+./multifish -config config/config.production.yaml
 
 # Without config (built-in defaults)
 ./multifish
 
 # Run in background
-nohup ./multifish -config config.production.yaml > multifish.log 2>&1 &
+nohup ./multifish -config config/config.production.yaml > multifish.log 2>&1 &
 ```
 
 ## Systemd Service Setup
@@ -162,7 +162,7 @@ For production deployments, use systemd for process management.
 
 ### 1. Update Service File
 
-Edit `multifish.service` to match your environment:
+Edit `service/multifish.service` to match your environment:
 
 ```ini
 [Unit]
@@ -199,7 +199,7 @@ WantedBy=multi-user.target
 
 ```bash
 # Copy service file
-sudo cp multifish.service /etc/systemd/system/
+sudo cp service/multifish.service /etc/systemd/system/
 
 # Reload systemd
 sudo systemctl daemon-reload
@@ -256,9 +256,9 @@ Docker provides an easy way to containerize and deploy MultiFish with all its de
 
 ### Quick Start with Docker
 
-#### 1. Create Dockerfile
+#### 1. Use the Dockerfile
 
-Create a `Dockerfile` in your project root:
+The maintained Dockerfile is located at `docker/Dockerfile`.
 
 ```dockerfile
 # Build stage
@@ -291,7 +291,7 @@ WORKDIR /app
 COPY --from=builder /build/multifish .
 
 # Copy configuration files (optional)
-COPY config.example.yaml ./config.yaml
+COPY config/config.example.yaml ./config.yaml
 
 # Create logs directory
 RUN mkdir -p /app/logs
@@ -307,13 +307,13 @@ CMD ["./multifish"]
 
 ```bash
 # Build image
-docker build -t multifish:latest .
+docker build -f docker/Dockerfile -t multifish:latest .
 
 # Build with specific tag
-docker build -t multifish:v1.0.0 .
+docker build -f docker/Dockerfile -t multifish:v1.0.0 .
 
 # Build with no cache
-docker build --no-cache -t multifish:latest .
+docker build -f docker/Dockerfile --no-cache -t multifish:latest .
 ```
 
 #### 3. Run Container
@@ -859,8 +859,8 @@ Important:
 #### 1. Use Production Configuration
 ```bash
 # Create production config
-cp config.example.yaml config.production.yaml
-nano config.production.yaml
+cp config/config.example.yaml config/config.production.yaml
+nano config/config.production.yaml
 ```
 
 Key settings for production:
@@ -874,11 +874,11 @@ Key settings for production:
 #### 2. Secure Configuration Files
 ```bash
 # Set proper permissions
-chmod 600 config.production.yaml
-chown yujen:yujen config.production.yaml
+chmod 600 config/config.production.yaml
+chown yujen:yujen config/config.production.yaml
 
 # Store sensitive configs outside web root
-mv config.production.yaml /etc/multifish/config.yaml
+mv config/config.production.yaml /etc/multifish/config.yaml
 chmod 600 /etc/multifish/config.yaml
 ```
 
@@ -987,7 +987,7 @@ cd /home/yujen/MultiFish
 cat config.yaml
 
 # Test with explicit config
-./multifish -config config.production.yaml
+./multifish -config config/config.production.yaml
 ```
 
 5. **Verify permissions**:

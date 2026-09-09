@@ -304,8 +304,8 @@ curl -i -H "Authorization: Bearer your-token" http://localhost:8080/MultiFish/v1
 
 ## References
 
-- [Main README](README.md)
+- [Main README](../README.md)
 - [Deployment Guide](DEPLOYMENT.md)
-- [Config Guide](config/README.md)
+- [Config Guide](../config/README.md)
 - [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
 - [Token Bucket Algorithm](https://en.wikipedia.org/wiki/Token_bucket)
